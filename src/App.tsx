@@ -1,27 +1,42 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Layout } from "./components/Layout";
 import Index from "./pages/Index";
+import Customers from "./pages/Customers";
+import CustomerForm from "./pages/CustomerForm";
+import CustomerDetails from "./pages/CustomerDetails";
+import Plans from "./pages/Plans";
+import PlanForm from "./pages/PlanForm";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <>
+    <Toaster />
+    <Sonner />
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/" element={<Layout><Index /></Layout>} />
+          
+          {/* Customers Routes */}
+          <Route path="/customers" element={<Layout><Customers /></Layout>} />
+          <Route path="/customers/new" element={<Layout><CustomerForm /></Layout>} />
+          <Route path="/customers/:id" element={<Layout><CustomerDetails /></Layout>} />
+          <Route path="/customers/:id/edit" element={<Layout><CustomerForm /></Layout>} />
+          
+          {/* Plans Routes */}
+          <Route path="/plans" element={<Layout><Plans /></Layout>} />
+          <Route path="/plans/new" element={<Layout><PlanForm /></Layout>} />
+          <Route path="/plans/:id/edit" element={<Layout><PlanForm /></Layout>} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+  </>
 );
 
 export default App;
