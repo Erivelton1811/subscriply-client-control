@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DaysRemainingIndicator } from "@/components/DaysRemainingIndicator";
-import { UserPlus, Search, X } from "lucide-react";
+import { UserPlus, Search, X, Phone } from "lucide-react";
 
 export default function Customers() {
   const { getCustomerDetails } = useSubscriptionStore();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "warning" | "expired">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "warning" | "expired" | "inactive">("all");
   
   const customers = getCustomerDetails();
   
@@ -19,12 +19,22 @@ export default function Customers() {
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch = 
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase());
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (customer.phone && customer.phone.includes(searchTerm));
       
     const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
+
+  // Function to format phone number for WhatsApp
+  const formatWhatsAppLink = (phone: string) => {
+    const cleanPhone = phone.replace(/\D/g, "");
+    const formattedPhone = cleanPhone.startsWith("+") 
+      ? cleanPhone 
+      : `55${cleanPhone}`;
+    return `https://wa.me/${formattedPhone}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -59,7 +69,7 @@ export default function Customers() {
           )}
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant={statusFilter === "all" ? "default" : "outline"}
             onClick={() => setStatusFilter("all")}
@@ -88,6 +98,13 @@ export default function Customers() {
           >
             Vencidos
           </Button>
+          <Button 
+            variant={statusFilter === "inactive" ? "default" : "outline"}
+            onClick={() => setStatusFilter("inactive")}
+            className="flex-1 sm:flex-none"
+          >
+            Inativos
+          </Button>
         </div>
       </div>
       
@@ -98,6 +115,7 @@ export default function Customers() {
             <tr className="border-b bg-muted/50">
               <th className="text-left py-3 px-4">Nome</th>
               <th className="text-left py-3 px-4 hidden sm:table-cell">Email</th>
+              <th className="text-left py-3 px-4">Telefone</th>
               <th className="text-left py-3 px-4">Plano</th>
               <th className="text-left py-3 px-4">Status</th>
               <th className="text-left py-3 px-4 hidden md:table-cell">Tempo Restante</th>
@@ -115,11 +133,26 @@ export default function Customers() {
                   <td className="py-3 px-4 hidden sm:table-cell text-muted-foreground">
                     {customer.email}
                   </td>
+                  <td className="py-3 px-4">
+                    {customer.phone ? (
+                      <a 
+                        href={formatWhatsAppLink(customer.phone)} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center text-green-600 hover:underline"
+                      >
+                        <Phone className="h-4 w-4 mr-1" />
+                        {customer.phone}
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">Não informado</span>
+                    )}
+                  </td>
                   <td className="py-3 px-4">{customer.plan.name}</td>
                   <td className="py-3 px-4">
                     <StatusBadge 
                       status={customer.status} 
-                      showWhatsAppButton={true}
+                      showWhatsAppButton={customer.status === 'warning' || customer.status === 'expired'}
                       phoneNumber={customer.phone}
                       customerName={customer.name}
                       planName={customer.plan.name}
@@ -127,13 +160,17 @@ export default function Customers() {
                     />
                   </td>
                   <td className="py-3 px-4 hidden md:table-cell">
-                    <DaysRemainingIndicator days={customer.daysRemaining} />
+                    {customer.status !== 'inactive' ? (
+                      <DaysRemainingIndicator days={customer.daysRemaining} />
+                    ) : (
+                      <span className="text-muted-foreground">N/A</span>
+                    )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="py-4 text-center text-muted-foreground">
+                <td colSpan={6} className="py-4 text-center text-muted-foreground">
                   {searchTerm || statusFilter !== "all" ? (
                     "Nenhum cliente encontrado para os critérios de busca."
                   ) : (

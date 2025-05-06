@@ -25,7 +25,8 @@ export default function CustomerForm() {
     email: "",
     phone: "",
     planId: "",
-    startDate: new Date().toISOString(), // Add startDate with current date as default
+    status: "active" as "active" | "inactive",
+    startDate: new Date().toISOString(),
   });
 
   const [errors, setErrors] = useState({
@@ -43,6 +44,7 @@ export default function CustomerForm() {
           email: customer.email,
           phone: customer.phone || "",
           planId: customer.planId,
+          status: customer.status || "active",
           startDate: customer.startDate,
         });
       }
@@ -107,6 +109,13 @@ export default function CustomerForm() {
     });
   };
 
+  const handleStatusChange = (value: "active" | "inactive") => {
+    setFormData({
+      ...formData,
+      status: value,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">
@@ -157,6 +166,22 @@ export default function CustomerForm() {
                 onChange={handleChange}
                 placeholder="(DDD) XXXXX-XXXX"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => handleStatusChange(value as "active" | "inactive")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

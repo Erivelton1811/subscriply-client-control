@@ -10,6 +10,7 @@ import CustomerForm from "./pages/CustomerForm";
 import CustomerDetails from "./pages/CustomerDetails";
 import Plans from "./pages/Plans";
 import PlanForm from "./pages/PlanForm";
+import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -28,6 +29,9 @@ const App = () => (
         <Route path="/plans" element={<Layout><Plans /></Layout>} />
         <Route path="/plans/new" element={<Layout><PlanForm /></Layout>} />
         <Route path="/plans/:id/edit" element={<Layout><PlanForm /></Layout>} />
+        
+        {/* Reports Route */}
+        <Route path="/reports" element={<Layout><Reports /></Layout>} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>

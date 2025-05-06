@@ -16,6 +16,7 @@ export default function PlanForm() {
   const [formData, setFormData] = useState({
     name: "",
     price: 0,
+    resalePrice: 0,
     duration: 30,
     description: "",
   });
@@ -23,9 +24,12 @@ export default function PlanForm() {
   const [errors, setErrors] = useState({
     name: "",
     price: "",
+    resalePrice: "",
     duration: "",
     description: "",
   });
+
+  const [profit, setProfit] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -34,6 +38,7 @@ export default function PlanForm() {
         setFormData({
           name: plan.name,
           price: plan.price,
+          resalePrice: plan.resalePrice || 0,
           duration: plan.duration,
           description: plan.description,
         });
@@ -41,9 +46,21 @@ export default function PlanForm() {
     }
   }, [id, getPlanById]);
 
+  useEffect(() => {
+    // Calculate profit whenever price or resalePrice changes
+    const calculatedProfit = formData.price - formData.resalePrice;
+    setProfit(calculatedProfit > 0 ? calculatedProfit : 0);
+  }, [formData.price, formData.resalePrice]);
+
   const validateForm = () => {
     let valid = true;
-    const newErrors = { name: "", price: "", duration: "", description: "" };
+    const newErrors = { 
+      name: "", 
+      price: "", 
+      resalePrice: "", 
+      duration: "", 
+      description: "" 
+    };
 
     if (!formData.name.trim()) {
       newErrors.name = "Nome do plano é obrigatório";
@@ -52,6 +69,11 @@ export default function PlanForm() {
 
     if (formData.price <= 0) {
       newErrors.price = "Preço deve ser maior que zero";
+      valid = false;
+    }
+
+    if (formData.resalePrice < 0) {
+      newErrors.resalePrice = "Preço de revenda não pode ser negativo";
       valid = false;
     }
 
@@ -81,7 +103,7 @@ export default function PlanForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    if (name === "price" || name === "duration") {
+    if (name === "price" || name === "duration" || name === "resalePrice") {
       setFormData({
         ...formData,
         [name]: parseFloat(value) || 0,
@@ -135,6 +157,31 @@ export default function PlanForm() {
               {errors.price && (
                 <p className="text-sm text-destructive">{errors.price}</p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="resalePrice">Preço de Revenda (R$)</Label>
+              <Input
+                id="resalePrice"
+                name="resalePrice"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.resalePrice}
+                onChange={handleChange}
+              />
+              {errors.resalePrice && (
+                <p className="text-sm text-destructive">{errors.resalePrice}</p>
+              )}
+            </div>
+
+            <div className="p-4 bg-muted rounded-md">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Lucro por Plano:</span>
+                <span className="text-xl font-bold text-green-600">
+                  R$ {profit.toFixed(2)}
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2">

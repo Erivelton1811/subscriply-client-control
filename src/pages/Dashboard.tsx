@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Plus } from "lucide-react";
+import { UserPlus, Plus, TrendingUp } from "lucide-react";
 import { DaysRemainingIndicator } from "@/components/DaysRemainingIndicator";
 
 export default function Dashboard() {
@@ -12,7 +12,8 @@ export default function Dashboard() {
     getCustomerDetails, 
     getActiveSubscriptions, 
     getExpiringSubscriptions, 
-    getExpiredSubscriptions 
+    getExpiredSubscriptions,
+    getExpectedMonthlyProfit
   } = useSubscriptionStore();
   
   const customers = getCustomerDetails();
@@ -21,6 +22,9 @@ export default function Dashboard() {
   const activeCount = getActiveSubscriptions();
   const expiringCount = getExpiringSubscriptions();
   const expiredCount = getExpiredSubscriptions();
+  
+  // Get monthly profit
+  const monthlyProfit = getExpectedMonthlyProfit();
   
   return (
     <div className="space-y-6">
@@ -43,7 +47,7 @@ export default function Dashboard() {
       </div>
       
       {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
@@ -82,6 +86,20 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+        
+        <Card className="bg-green-50 dark:bg-green-950/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <TrendingUp className="mr-2 h-4 w-4 text-green-600" />
+              Lucro Mensal Esperado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-600">
+              R$ {monthlyProfit.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
       {/* Recent Customers */}
@@ -104,7 +122,10 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {customers.length > 0 ? customers.slice(0, 5).map((customer) => (
+                {customers.length > 0 ? customers
+                  .filter(customer => customer.status !== 'inactive')
+                  .slice(0, 5)
+                  .map((customer) => (
                   <tr key={customer.id} className="border-b hover:bg-muted/50">
                     <td className="py-3 px-4">
                       <Link to={`/customers/${customer.id}`} className="hover:underline font-medium">

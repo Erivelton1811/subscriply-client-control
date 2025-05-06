@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, PackageOpen } from "lucide-react";
+import { LayoutDashboard, Users, PackageOpen, BarChart } from "lucide-react";
 
 interface NavItemProps {
   to: string;
@@ -62,6 +62,13 @@ export function Layout({ children }: LayoutProps) {
             isActive={currentPath.startsWith("/plans")}
           >
             Planos
+          </NavItem>
+          <NavItem 
+            to="/reports" 
+            icon={BarChart} 
+            isActive={currentPath.startsWith("/reports")}
+          >
+            Relatórios
           </NavItem>
         </div>
       </nav>
