@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSubscriptionStore } from "@/store/subscriptionStore";
@@ -108,12 +107,13 @@ export default function CustomerDetails() {
                   <p>{customer.phone}</p>
                 </div>
                 
-                {customer.status === "warning" && customer.phone && (
+                {(customer.status === "warning" || customer.status === "expired") && customer.phone && (
                   <WhatsAppButton 
                     phoneNumber={customer.phone} 
                     customerName={customer.name} 
                     planName={customer.plan.name}
                     daysRemaining={customer.daysRemaining}
+                    status={customer.status}
                   />
                 )}
               </div>
