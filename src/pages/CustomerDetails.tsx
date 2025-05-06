@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DaysRemainingIndicator } from "@/components/DaysRemainingIndicator";
-import { Edit, Trash2, RefreshCw, ArrowLeft } from "lucide-react";
+import { Edit, Trash2, RefreshCw, ArrowLeft, MessageCircle } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 export default function CustomerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -101,9 +102,20 @@ export default function CustomerDetails() {
             </div>
             
             {customer.phone && (
-              <div>
-                <p className="text-sm text-muted-foreground">Telefone</p>
-                <p>{customer.phone}</p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Telefone</p>
+                  <p>{customer.phone}</p>
+                </div>
+                
+                {customer.status === "warning" && customer.phone && (
+                  <WhatsAppButton 
+                    phoneNumber={customer.phone} 
+                    customerName={customer.name} 
+                    planName={customer.plan.name}
+                    daysRemaining={customer.daysRemaining}
+                  />
+                )}
               </div>
             )}
             
