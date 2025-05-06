@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { WhatsappIcon } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 interface WhatsAppButtonProps {
   phoneNumber: string;
@@ -49,7 +49,7 @@ export function WhatsAppButton({ phoneNumber, customerName, planName, daysRemain
           className="rounded-full bg-green-500 hover:bg-green-600 text-white border-0"
           onClick={() => window.open(whatsappUrl, "_blank")}
         >
-          <WhatsappIcon className="h-4 w-4"/>
+          <MessageSquare className="h-4 w-4"/>
           <span className="sr-only">Enviar mensagem no WhatsApp</span>
         </Button>
       </TooltipTrigger>

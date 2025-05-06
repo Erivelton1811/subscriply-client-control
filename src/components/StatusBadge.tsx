@@ -1,7 +1,7 @@
 
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { WhatsappIcon } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 type StatusType = 'active' | 'expired' | 'warning';
 
@@ -94,7 +94,7 @@ export function StatusBadge({
               className="rounded-full bg-green-500 hover:bg-green-600 text-white p-1 h-5 w-5 flex items-center justify-center"
               onClick={handleWhatsAppClick}
             >
-              <WhatsappIcon className="h-3 w-3 text-white" />
+              <MessageSquare className="h-3 w-3 text-white" />
               <span className="sr-only">Enviar mensagem no WhatsApp</span>
             </button>
           </TooltipTrigger>
