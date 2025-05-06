@@ -13,30 +13,29 @@ import PlanForm from "./pages/PlanForm";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
-  <>
-    <Toaster />
-    <Sonner />
-    <TooltipProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout><Index /></Layout>} />
-          
-          {/* Customers Routes */}
-          <Route path="/customers" element={<Layout><Customers /></Layout>} />
-          <Route path="/customers/new" element={<Layout><CustomerForm /></Layout>} />
-          <Route path="/customers/:id" element={<Layout><CustomerDetails /></Layout>} />
-          <Route path="/customers/:id/edit" element={<Layout><CustomerForm /></Layout>} />
-          
-          {/* Plans Routes */}
-          <Route path="/plans" element={<Layout><Plans /></Layout>} />
-          <Route path="/plans/new" element={<Layout><PlanForm /></Layout>} />
-          <Route path="/plans/:id/edit" element={<Layout><PlanForm /></Layout>} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </>
+  <TooltipProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout><Index /></Layout>} />
+        
+        {/* Customers Routes */}
+        <Route path="/customers" element={<Layout><Customers /></Layout>} />
+        <Route path="/customers/new" element={<Layout><CustomerForm /></Layout>} />
+        <Route path="/customers/:id" element={<Layout><CustomerDetails /></Layout>} />
+        <Route path="/customers/:id/edit" element={<Layout><CustomerForm /></Layout>} />
+        
+        {/* Plans Routes */}
+        <Route path="/plans" element={<Layout><Plans /></Layout>} />
+        <Route path="/plans/new" element={<Layout><PlanForm /></Layout>} />
+        <Route path="/plans/:id/edit" element={<Layout><PlanForm /></Layout>} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      
+      <Toaster />
+      <Sonner />
+    </BrowserRouter>
+  </TooltipProvider>
 );
 
 export default App;

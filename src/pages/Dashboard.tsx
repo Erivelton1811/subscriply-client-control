@@ -104,7 +104,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {customers.slice(0, 5).map((customer) => (
+                {customers.length > 0 ? customers.slice(0, 5).map((customer) => (
                   <tr key={customer.id} className="border-b hover:bg-muted/50">
                     <td className="py-3 px-4">
                       <Link to={`/customers/${customer.id}`} className="hover:underline font-medium">
@@ -119,9 +119,7 @@ export default function Dashboard() {
                       <DaysRemainingIndicator days={customer.daysRemaining} />
                     </td>
                   </tr>
-                ))}
-                
-                {customers.length === 0 && (
+                )) : (
                   <tr>
                     <td colSpan={4} className="py-4 text-center text-muted-foreground">
                       Nenhum cliente cadastrado

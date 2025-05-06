@@ -25,6 +25,7 @@ export default function CustomerForm() {
     email: "",
     phone: "",
     planId: "",
+    startDate: new Date().toISOString(), // Add startDate with current date as default
   });
 
   const [errors, setErrors] = useState({
@@ -42,6 +43,7 @@ export default function CustomerForm() {
           email: customer.email,
           phone: customer.phone || "",
           planId: customer.planId,
+          startDate: customer.startDate,
         });
       }
     } else if (plans.length > 0) {
