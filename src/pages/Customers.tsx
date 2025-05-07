@@ -1,187 +1,241 @@
-
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useSubscriptionStore } from "@/store/subscriptionStore";
-import { Button } from "@/components/ui/button";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/StatusBadge";
-import { DaysRemainingIndicator } from "@/components/DaysRemainingIndicator";
-import { UserPlus, Search, X, Phone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Edit, Trash2, Plus } from "lucide-react";
+import { Customer, CustomerWithPlanDetails } from "@/types";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+
+const fetchCustomers = async (): Promise<CustomerWithPlanDetails[]> => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/customers?_embed=subscriptions`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+};
+
+const deleteCustomer = async (id: string): Promise<void> => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/customers/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+};
 
 export default function Customers() {
-  const { getCustomerDetails } = useSubscriptionStore();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "warning" | "expired" | "inactive">("all");
-  
-  const customers = getCustomerDetails();
-  
-  // Filter customers based on search term and status
-  const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch = 
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (customer.phone && customer.phone.includes(searchTerm));
-      
-    const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+  const [search, setSearch] = useState("");
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const {
+    data: customers = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["customers"],
+    queryFn: fetchCustomers,
   });
 
-  // Function to format phone number for WhatsApp
-  const formatWhatsAppLink = (phone: string) => {
-    const cleanPhone = phone.replace(/\D/g, "");
-    const formattedPhone = cleanPhone.startsWith("+") 
-      ? cleanPhone 
-      : `55${cleanPhone}`;
-    return `https://wa.me/${formattedPhone}`;
+  const { mutate: removeCustomer, isLoading: isDeleting } = useMutation(deleteCustomer, {
+    onSuccess: () => {
+      toast.success('Cliente removido com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setDeleteConfirmationOpen(false);
+      setCustomerToDelete(null);
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao remover cliente: ${error.message}`);
+      setDeleteConfirmationOpen(false);
+      setCustomerToDelete(null);
+    },
+  });
+
+  const filteredCustomers = useMemo(() => {
+    const lowerCaseSearch = search.toLowerCase();
+    return customers.filter((customer) => {
+      return (
+        customer.name.toLowerCase().includes(lowerCaseSearch) ||
+        customer.email.toLowerCase().includes(lowerCaseSearch)
+      );
+    });
+  }, [customers, search]);
+
+  const handleDeleteClick = (id: string) => {
+    setCustomerToDelete(id);
+    setDeleteConfirmationOpen(true);
   };
 
+  const confirmDelete = () => {
+    if (customerToDelete) {
+      removeCustomer(customerToDelete);
+    }
+  };
+
+  if (isLoading) return <div>Carregando clientes...</div>;
+  if (isError) return <div>Erro ao carregar clientes: {error instanceof Error ? error.message : 'Unknown error'}</div>;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Clientes</h1>
-        <Button asChild>
-          <Link to="/customers/new">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Novo Cliente
-          </Link>
-        </Button>
+        <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
+        <Link to="/customers/new">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Cliente
+          </Button>
+        </Link>
       </div>
-      
-      {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar clientes..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Limpar busca</span>
-            </button>
-          )}
-        </div>
-        
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant={statusFilter === "all" ? "default" : "outline"}
-            onClick={() => setStatusFilter("all")}
-            className="flex-1 sm:flex-none"
-          >
-            Todos
-          </Button>
-          <Button 
-            variant={statusFilter === "active" ? "default" : "outline"}
-            onClick={() => setStatusFilter("active")}
-            className="flex-1 sm:flex-none"
-          >
-            Ativos
-          </Button>
-          <Button 
-            variant={statusFilter === "warning" ? "default" : "outline"}
-            onClick={() => setStatusFilter("warning")}
-            className="flex-1 sm:flex-none"
-          >
-            Vencendo
-          </Button>
-          <Button 
-            variant={statusFilter === "expired" ? "default" : "outline"}
-            onClick={() => setStatusFilter("expired")}
-            className="flex-1 sm:flex-none"
-          >
-            Vencidos
-          </Button>
-          <Button 
-            variant={statusFilter === "inactive" ? "default" : "outline"}
-            onClick={() => setStatusFilter("inactive")}
-            className="flex-1 sm:flex-none"
-          >
-            Inativos
-          </Button>
-        </div>
-      </div>
-      
-      {/* Customers List */}
+
+      <Input
+        type="search"
+        placeholder="Buscar clientes..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
       <div className="border rounded-md">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="text-left py-3 px-4">Nome</th>
-              <th className="text-left py-3 px-4 hidden sm:table-cell">Email</th>
-              <th className="text-left py-3 px-4">Telefone</th>
-              <th className="text-left py-3 px-4">Plano</th>
-              <th className="text-left py-3 px-4">Status</th>
-              <th className="text-left py-3 px-4 hidden md:table-cell">Tempo Restante</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCustomers.length > 0 ? (
-              filteredCustomers.map((customer) => (
-                <tr key={customer.id} className="border-b hover:bg-muted/50">
-                  <td className="py-3 px-4">
-                    <Link to={`/customers/${customer.id}`} className="hover:underline font-medium">
-                      {customer.name}
-                    </Link>
-                  </td>
-                  <td className="py-3 px-4 hidden sm:table-cell text-muted-foreground">
-                    {customer.email}
-                  </td>
-                  <td className="py-3 px-4">
-                    {customer.phone ? (
-                      <a 
-                        href={formatWhatsAppLink(customer.phone)} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center text-green-600 hover:underline"
-                      >
-                        <Phone className="h-4 w-4 mr-1" />
-                        {customer.phone}
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground">Não informado</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">{customer.plan.name}</td>
-                  <td className="py-3 px-4">
-                    <StatusBadge 
-                      status={customer.status} 
-                      showWhatsAppButton={customer.status === 'warning' || customer.status === 'expired'}
-                      phoneNumber={customer.phone}
-                      customerName={customer.name}
-                      planName={customer.plan.name}
-                      daysRemaining={customer.daysRemaining}
-                    />
-                  </td>
-                  <td className="py-3 px-4 hidden md:table-cell">
-                    {customer.status !== 'inactive' ? (
-                      <DaysRemainingIndicator days={customer.daysRemaining} />
-                    ) : (
-                      <span className="text-muted-foreground">N/A</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="py-4 text-center text-muted-foreground">
-                  {searchTerm || statusFilter !== "all" ? (
-                    "Nenhum cliente encontrado para os critérios de busca."
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Planos</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredCustomers.map((customer) => (
+              <TableRow key={customer.id}>
+                <TableCell className="font-medium">
+                  <Link to={`/customers/${customer.id}`} className="hover:underline">
+                    {customer.name}
+                  </Link>
+                </TableCell>
+                <TableCell>{customer.email}</TableCell>
+                <TableCell>
+                  <Badge variant={customer.status === 'active' ? 'outline' : 'secondary'}>
+                    {customer.status === 'active' ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {customer.subscriptions.length > 0 ? (
+                    <div className="space-y-1">
+                      {customer.subscriptions.map((sub, index) => (
+                        <div key={index} className="flex items-center">
+                          <Badge
+                            variant={
+                              sub.status === 'warning' ? 'warning' :
+                              sub.status === 'expired' ? 'destructive' :
+                              'default'
+                            }
+                            className="mr-2"
+                          >
+                            {sub.plan.name}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {sub.daysRemaining > 0 
+                              ? `${sub.daysRemaining} dias restantes` 
+                              : 'Expirado'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    "Nenhum cliente cadastrado."
+                    <span className="text-muted-foreground">Sem planos ativos</span>
                   )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <path d="M3 12h18M3 6h18M3 18h18" />
+                        </svg>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link to={`/customers/${customer.id}/edit`}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteClick(customer.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
+
+      <Dialog open={deleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogDescription>
+              Tem certeza de que deseja excluir este cliente? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setDeleteConfirmationOpen(false)} disabled={isDeleting}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

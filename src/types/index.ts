@@ -3,15 +3,15 @@ export interface Plan {
   id: string;
   name: string;
   price: number;
-  resalePrice?: number; // Added resale price field
-  duration: number; // in days
+  resalePrice?: number;
+  duration: number;
   description: string;
 }
 
 export interface CustomerSubscription {
   id: string;
   planId: string;
-  startDate: string; // ISO date string
+  startDate: string;
 }
 
 export interface Customer {
@@ -33,10 +33,21 @@ export interface CustomerWithPlanDetails extends Omit<Customer, "subscriptions">
   }>;
 }
 
-// New interface for reports data
 export interface ReportData {
   id: string;
   title: string;
   description: string;
   visible: boolean;
+}
+
+// Auth related interfaces
+export interface User {
+  username: string;
+  password: string;
+  isAdmin: boolean;
+}
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
 }

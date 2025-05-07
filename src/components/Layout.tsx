@@ -1,8 +1,11 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, PackageOpen, BarChart } from "lucide-react";
+import { BarChart, LayoutDashboard, LogOut, PackageOpen, Settings, Users } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface NavItemProps {
   to: string;
@@ -34,7 +37,15 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logout realizado com sucesso');
+    navigate('/login');
+  };
 
   return (
     <div className="flex h-screen bg-muted/20">
@@ -70,6 +81,30 @@ export function Layout({ children }: LayoutProps) {
           >
             Relatórios
           </NavItem>
+          {user?.isAdmin && (
+            <NavItem 
+              to="/admin" 
+              icon={Settings} 
+              isActive={currentPath.startsWith("/admin")}
+            >
+              Admin
+            </NavItem>
+          )}
+        </div>
+        
+        <div className="border-t pt-4 mt-4">
+          <div className="px-4 py-2 mb-2 text-sm text-muted-foreground">
+            <span>Logado como: </span>
+            <span className="font-medium text-foreground">{user?.username}</span>
+          </div>
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sair
+          </Button>
         </div>
       </nav>
 

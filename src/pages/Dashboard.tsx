@@ -1,165 +1,114 @@
-
-import { useSubscriptionStore } from "@/store/subscriptionStore";
-import { StatusBadge } from "@/components/StatusBadge";
+import { useCustomers } from "@/hooks/use-customers";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { UserPlus, Plus, TrendingUp } from "lucide-react";
-import { DaysRemainingIndicator } from "@/components/DaysRemainingIndicator";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 export default function Dashboard() {
-  const { 
-    getCustomerDetails, 
-    getActiveSubscriptions, 
-    getExpiringSubscriptions, 
-    getExpiredSubscriptions,
-    getExpectedMonthlyProfit
-  } = useSubscriptionStore();
-  
-  const customers = getCustomerDetails();
-  
-  // Get counts
-  const activeCount = getActiveSubscriptions();
-  const expiringCount = getExpiringSubscriptions();
-  const expiredCount = getExpiredSubscriptions();
-  
-  // Get monthly profit
-  const monthlyProfit = getExpectedMonthlyProfit();
-  
+  const customers = useCustomers();
+
+  // Get customers with active plans
+  const activeCustomers = customers.filter((customer) => 
+    customer.status === 'active' && customer.subscriptions.some(sub => sub.status === 'active')
+  );
+
+  // Get customers with expiring plans (warning status)
+  const expiringCustomers = customers.filter((customer) =>
+    customer.subscriptions.some(sub => sub.status === 'warning')
+  );
+
+  // Get total revenue
+  const totalRevenue = customers.reduce((sum, customer) => {
+    const customerRevenue = customer.subscriptions.reduce((subSum, sub) => 
+      subSum + sub.plan.price, 0);
+    return sum + customerRevenue;
+  }, 0);
+
+  // Get total resale revenue (if applicable)
+  const totalResaleRevenue = customers.reduce((sum, customer) => {
+    const customerResaleRevenue = customer.subscriptions.reduce((subSum, sub) => 
+      subSum + (sub.plan.resalePrice || sub.plan.price), 0);
+    return sum + customerResaleRevenue;
+  }, 0);
+
+  // Calculate profit margin
+  const profitMargin = totalResaleRevenue - totalRevenue;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <div className="flex gap-4">
-          <Button asChild>
-            <Link to="/customers/new">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Novo Cliente
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/plans/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Plano
-            </Link>
-          </Button>
-        </div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
       </div>
-      
-      {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <Separator />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Assinaturas Ativas
-            </CardTitle>
+          <CardHeader>
+            <CardTitle>Clientes Ativos</CardTitle>
+            <CardDescription>Número de clientes com planos ativos</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-status-active">
-              {activeCount}
-            </div>
+            <div className="text-2xl font-bold">{activeCustomers.length}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Assinaturas Próximas ao Vencimento
-            </CardTitle>
+          <CardHeader>
+            <CardTitle>Planos Expirando</CardTitle>
+            <CardDescription>Clientes com planos próximos do vencimento</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-status-warning">
-              {expiringCount}
-            </div>
+            <div className="text-2xl font-bold">{expiringCustomers.length}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Assinaturas Vencidas
-            </CardTitle>
+          <CardHeader>
+            <CardTitle>Receita Total</CardTitle>
+            <CardDescription>Receita gerada por todos os planos</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-status-expired">
-              {expiredCount}
-            </div>
+            <div className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-green-50 dark:bg-green-950/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <TrendingUp className="mr-2 h-4 w-4 text-green-600" />
-              Lucro Mensal Esperado
-            </CardTitle>
+
+         <Card>
+          <CardHeader>
+            <CardTitle>Margem de Lucro</CardTitle>
+            <CardDescription>Lucro total (receita de revenda - receita original)</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              R$ {monthlyProfit.toFixed(2)}
-            </div>
+            <div className="text-2xl font-bold">R$ {profitMargin.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
-      
-      {/* Recent Customers */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Clientes Recentes</CardTitle>
-          <CardDescription>
-            Visão geral dos últimos clientes e status de suas assinaturas
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4">Cliente</th>
-                  <th className="text-left py-3 px-4">Plano</th>
-                  <th className="text-left py-3 px-4">Status</th>
-                  <th className="text-left py-3 px-4">Tempo Restante</th>
-                </tr>
-              </thead>
-              <tbody>
-                {customers.length > 0 ? customers
-                  .filter(customer => customer.status !== 'inactive')
-                  .slice(0, 5)
-                  .map((customer) => (
-                  <tr key={customer.id} className="border-b hover:bg-muted/50">
-                    <td className="py-3 px-4">
-                      <Link to={`/customers/${customer.id}`} className="hover:underline font-medium">
-                        {customer.name}
-                      </Link>
-                    </td>
-                    <td className="py-3 px-4">{customer.plan.name}</td>
-                    <td className="py-3 px-4">
-                      <StatusBadge status={customer.status} />
-                    </td>
-                    <td className="py-3 px-4">
-                      <DaysRemainingIndicator days={customer.daysRemaining} />
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={4} className="py-4 text-center text-muted-foreground">
-                      Nenhum cliente cadastrado
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Clientes com Planos Expirando</h2>
+        <Separator />
+        {expiringCustomers.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+            {expiringCustomers.map((customer) => (
+              <Card key={customer.id}>
+                <CardHeader>
+                  <CardTitle>{customer.name}</CardTitle>
+                  <CardDescription>{customer.email}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {customer.subscriptions.map((sub) => (
+                    <div key={sub.id} className="mb-2">
+                      <Badge variant="warning">
+                        {sub.plan.name} - {sub.daysRemaining} dias restantes
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
           </div>
-          
-          {customers.length > 5 && (
-            <div className="mt-4 text-center">
-              <Button variant="outline" asChild>
-                <Link to="/customers">Ver todos os clientes</Link>
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        ) : (
+          <p className="text-muted-foreground mt-4">Nenhum cliente com planos expirando.</p>
+        )}
+      </div>
     </div>
   );
 }
