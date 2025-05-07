@@ -15,13 +15,18 @@ export interface Customer {
   phone?: string;
   planId: string;
   startDate: string; // ISO date string
-  status: 'active' | 'inactive'; // Added status field
+  status: 'active' | 'inactive';
 }
 
-export interface CustomerWithPlanDetails extends Omit<Customer, 'planId'> {
+export interface CustomerWithPlanDetails {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
   plan: Plan;
   daysRemaining: number;
   status: 'active' | 'expired' | 'warning' | 'inactive';
+  startDate: string;
 }
 
 // New interface for reports data

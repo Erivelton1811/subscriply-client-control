@@ -54,14 +54,16 @@ export const customers: Customer[] = [
     email: "joao.silva@example.com",
     phone: "(11) 98765-4321",
     planId: "plan1",
-    startDate: fifteenDaysAgo.toISOString()
+    startDate: fifteenDaysAgo.toISOString(),
+    status: "active"
   },
   {
     id: "cust2",
     name: "Maria Oliveira",
     email: "maria.oliveira@example.com",
     planId: "plan2",
-    startDate: thirtyDaysAgo.toISOString()
+    startDate: thirtyDaysAgo.toISOString(),
+    status: "active"
   },
   {
     id: "cust3",
@@ -69,13 +71,15 @@ export const customers: Customer[] = [
     email: "pedro.santos@example.com",
     phone: "(21) 99876-5432",
     planId: "plan3",
-    startDate: fiveDaysAgo.toISOString()
+    startDate: fiveDaysAgo.toISOString(),
+    status: "active"
   },
   {
     id: "cust4",
     name: "Ana Costa",
     email: "ana.costa@example.com",
     planId: "plan4",
-    startDate: today.toISOString()
+    startDate: today.toISOString(),
+    status: "active"
   }
 ];

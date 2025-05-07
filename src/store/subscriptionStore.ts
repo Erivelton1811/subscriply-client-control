@@ -86,7 +86,7 @@ interface SubscriptionState {
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   plans: initialPlans,
-  customers: initialCustomers.map(c => ({ ...c, status: "active" })),
+  customers: initialCustomers,
   reports: initialReports,
   
   // Plans actions
@@ -273,7 +273,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
   
   getActiveSubscriptions: () => {
-    return get().getCustomerDetails().filter(c => c.status === 'active' && c.status !== 'inactive').length;
+    return get().getCustomerDetails().filter(c => c.status === 'active').length;
   },
   
   getExpiringSubscriptions: () => {

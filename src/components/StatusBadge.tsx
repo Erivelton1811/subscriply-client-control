@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { MessageSquare } from "lucide-react";
 
-type StatusType = 'active' | 'expired' | 'warning';
+type StatusType = 'active' | 'expired' | 'warning' | 'inactive';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -27,6 +27,10 @@ const statusConfig = {
   warning: {
     label: "Próximo ao vencimento",
     color: "bg-status-warning text-white",
+  },
+  inactive: {
+    label: "Inativo",
+    color: "bg-gray-500 text-white",
   },
 };
 

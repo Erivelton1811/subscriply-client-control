@@ -11,7 +11,7 @@ interface CustomerInfoCardProps {
   phone?: string;
   name: string;
   planName: string;
-  status: 'warning' | 'expired' | 'active';
+  status: 'warning' | 'expired' | 'active' | 'inactive';
   daysRemaining: number;
   onDeleteClick: () => void;
 }
