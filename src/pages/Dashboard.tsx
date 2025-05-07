@@ -96,7 +96,7 @@ export default function Dashboard() {
                 <CardContent>
                   {customer.subscriptions.map((sub) => (
                     <div key={sub.id} className="mb-2">
-                      <Badge variant="warning">
+                      <Badge variant="warning" className="bg-yellow-100 text-yellow-800 border-yellow-300">
                         {sub.plan.name} - {sub.daysRemaining} dias restantes
                       </Badge>
                     </div>

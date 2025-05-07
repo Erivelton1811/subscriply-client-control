@@ -31,41 +31,24 @@ import { Edit, Trash2, Plus } from "lucide-react";
 import { Customer, CustomerWithPlanDetails } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-
-const fetchCustomers = async (): Promise<CustomerWithPlanDetails[]> => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/customers?_embed=subscriptions`);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  return response.json();
-};
-
-const deleteCustomer = async (id: string): Promise<void> => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/customers/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-};
+import { useCustomers } from "@/hooks/use-customers";
+import { useSubscriptionStore } from "@/store/subscriptionStore";
 
 export default function Customers() {
   const [search, setSearch] = useState("");
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const deleteCustomer = useSubscriptionStore(state => state.deleteCustomer);
+  
+  // Use the custom hook for customers data
+  const customers = useCustomers();
 
-  const {
-    data: customers = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["customers"],
-    queryFn: fetchCustomers,
-  });
-
-  const { mutate: removeCustomer, isLoading: isDeleting } = useMutation(deleteCustomer, {
+  const { mutate: removeCustomer, isPending: isDeleting } = useMutation({
+    mutationFn: (id: string) => {
+      deleteCustomer(id);
+      return Promise.resolve();
+    },
     onSuccess: () => {
       toast.success('Cliente removido com sucesso!');
       queryClient.invalidateQueries({ queryKey: ["customers"] });
@@ -99,9 +82,6 @@ export default function Customers() {
       removeCustomer(customerToDelete);
     }
   };
-
-  if (isLoading) return <div>Carregando clientes...</div>;
-  if (isError) return <div>Erro ao carregar clientes: {error instanceof Error ? error.message : 'Unknown error'}</div>;
 
   return (
     <div className="space-y-8">
