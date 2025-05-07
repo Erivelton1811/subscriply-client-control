@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { plans as initialPlans, customers as initialCustomers } from '../data/mockData';
 import { Plan, Customer, CustomerWithPlanDetails, ReportData } from '../types';
@@ -166,13 +165,49 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     const customer = get().customers.find(c => c.id === customerId);
     if (!customer) return;
     
-    set((state) => ({
-      customers: state.customers.map((c) => 
-        c.id === customerId
-          ? { ...c, planId: planId || c.planId, startDate: new Date().toISOString() }
-          : c
-      ),
-    }));
+    const customerDetails = get().getCustomerById(customerId);
+    if (!customerDetails) return;
+    
+    const newPlanId = planId || customer.planId;
+    const newPlan = get().plans.find(p => p.id === newPlanId);
+    if (!newPlan) return;
+    
+    // Calculate new start date considering remaining days
+    let newStartDate = new Date();
+    
+    // If customer has remaining days and is not inactive, accumulate them
+    if (customerDetails.daysRemaining > 0 && customer.status !== 'inactive') {
+      // Get current start date and add the new plan's duration to it
+      const currentEndDate = new Date(customerDetails.startDate);
+      currentEndDate.setDate(currentEndDate.getDate() + customerDetails.plan.duration);
+      
+      // Set the new start date to be today, but we'll adjust the stored date
+      // to account for the remaining days
+      newStartDate = new Date();
+      
+      // Adjust the stored date to account for remaining days
+      // We subtract the remaining days from the current date for storage
+      const adjustedStartDate = new Date();
+      adjustedStartDate.setDate(adjustedStartDate.getDate() - customerDetails.daysRemaining);
+      
+      set((state) => ({
+        customers: state.customers.map((c) => 
+          c.id === customerId
+            ? { ...c, planId: newPlanId, startDate: adjustedStartDate.toISOString() }
+            : c
+        ),
+      }));
+    } else {
+      // No remaining days or inactive customer, just set the new start date to today
+      set((state) => ({
+        customers: state.customers.map((c) => 
+          c.id === customerId
+            ? { ...c, planId: newPlanId, startDate: newStartDate.toISOString() }
+            : c
+        ),
+      }));
+    }
+    
     toast.success("Assinatura renovada com sucesso");
   },
   

@@ -99,6 +99,7 @@ export default function CustomerDetails() {
         plans={plans}
         selectedPlanId={selectedPlanId}
         onPlanChange={setSelectedPlanId}
+        daysRemaining={customer.daysRemaining}
       />
     </div>
   );

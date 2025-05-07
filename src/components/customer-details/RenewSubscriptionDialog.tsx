@@ -25,6 +25,7 @@ interface RenewSubscriptionDialogProps {
   plans: Plan[];
   selectedPlanId: string;
   onPlanChange: (planId: string) => void;
+  daysRemaining: number;
 }
 
 export function RenewSubscriptionDialog({ 
@@ -33,7 +34,8 @@ export function RenewSubscriptionDialog({
   onConfirm,
   plans,
   selectedPlanId,
-  onPlanChange
+  onPlanChange,
+  daysRemaining
 }: RenewSubscriptionDialogProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
@@ -41,7 +43,14 @@ export function RenewSubscriptionDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Renovar Assinatura</AlertDialogTitle>
           <AlertDialogDescription>
-            Escolha o plano para renovação. A nova data de início será hoje.
+            Escolha o plano para renovação.
+            {daysRemaining > 0 ? (
+              <p className="mt-2 font-medium text-amber-600">
+                O cliente ainda possui {daysRemaining} dias restantes. Esses dias serão acumulados com o novo período.
+              </p>
+            ) : (
+              <p className="mt-2">A nova data de início será hoje.</p>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         
