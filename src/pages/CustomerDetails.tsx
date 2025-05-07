@@ -13,11 +13,12 @@ import { RenewSubscriptionDialog } from "@/components/customer-details/RenewSubs
 export default function CustomerDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getCustomerById, deleteCustomer, renewSubscription, plans } = useSubscriptionStore();
+  const { getCustomerById, deleteCustomer, renewSubscription, plans, removeSubscription } = useSubscriptionStore();
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRenewDialogOpen, setIsRenewDialogOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState("");
 
   if (!id) {
     navigate("/customers");
@@ -37,12 +38,13 @@ export default function CustomerDetails() {
   };
 
   const handleRenew = () => {
-    renewSubscription(id, selectedPlanId || undefined);
+    renewSubscription(id, selectedSubscriptionId, selectedPlanId || undefined);
     setIsRenewDialogOpen(false);
   };
 
-  const openRenewDialog = () => {
-    setSelectedPlanId(customer.plan.id);
+  const openRenewDialog = (subscriptionId: string, planId: string) => {
+    setSelectedSubscriptionId(subscriptionId);
+    setSelectedPlanId(planId);
     setIsRenewDialogOpen(true);
   };
 
@@ -51,9 +53,12 @@ export default function CustomerDetails() {
     return new Intl.DateTimeFormat('pt-BR').format(date);
   };
 
-  const startDate = new Date(customer.startDate);
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + customer.plan.duration);
+  const getEndDate = (startDate: string, duration: number) => {
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + duration);
+    return formatDate(end.toISOString());
+  };
 
   return (
     <div className="space-y-6">
@@ -66,22 +71,33 @@ export default function CustomerDetails() {
           email={customer.email}
           phone={customer.phone}
           name={customer.name}
-          planName={customer.plan.name}
           status={customer.status}
-          daysRemaining={customer.daysRemaining}
           onDeleteClick={() => setIsDeleteDialogOpen(true)}
         />
 
-        {/* Subscription Information Card */}
-        <SubscriptionCard 
-          status={customer.status}
-          daysRemaining={customer.daysRemaining}
-          planName={customer.plan.name}
-          planPrice={customer.plan.price}
-          startDate={formatDate(customer.startDate)}
-          endDate={formatDate(endDate.toISOString())}
-          onRenewClick={openRenewDialog}
-        />
+        {/* Subscriptions */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold">Assinaturas</h2>
+          
+          {customer.subscriptions.length === 0 ? (
+            <p className="text-muted-foreground">Este cliente não possui assinaturas.</p>
+          ) : (
+            customer.subscriptions.map((subscription) => (
+              <SubscriptionCard
+                key={subscription.id}
+                subscriptionId={subscription.id}
+                status={subscription.status}
+                daysRemaining={subscription.daysRemaining}
+                planName={subscription.plan.name}
+                planPrice={subscription.plan.price}
+                startDate={formatDate(subscription.startDate)}
+                endDate={getEndDate(subscription.startDate, subscription.plan.duration)}
+                onRenewClick={() => openRenewDialog(subscription.id, subscription.plan.id)}
+                onRemoveClick={() => removeSubscription(id, subscription.id)}
+              />
+            ))
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}
@@ -99,7 +115,7 @@ export default function CustomerDetails() {
         plans={plans}
         selectedPlanId={selectedPlanId}
         onPlanChange={setSelectedPlanId}
-        daysRemaining={customer.daysRemaining}
+        daysRemaining={customer.subscriptions.find(sub => sub.id === selectedSubscriptionId)?.daysRemaining || 0}
       />
     </div>
   );

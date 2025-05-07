@@ -20,8 +20,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type SubscriptionFormItem = {
+  planId: string;
+  startDate: Date;
+};
 
 export default function CustomerForm() {
   const { id } = useParams();
@@ -33,13 +38,12 @@ export default function CustomerForm() {
     name: "",
     email: "",
     phone: "",
-    planId: "",
     status: "active" as "active" | "inactive",
-    startDate: new Date().toISOString(),
   });
 
-  // State to hold the date object for the calendar
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [subscriptions, setSubscriptions] = useState<SubscriptionFormItem[]>([
+    { planId: plans.length > 0 ? plans[0].id : "", startDate: new Date() }
+  ]);
 
   const [errors, setErrors] = useState({
     name: "",
@@ -49,23 +53,28 @@ export default function CustomerForm() {
 
   useEffect(() => {
     if (id) {
-      const customer = customers.find(c => c.id === id);
+      const customer = getCustomerById(id);
       if (customer) {
         setFormData({
           name: customer.name,
           email: customer.email,
           phone: customer.phone || "",
-          planId: customer.planId,
-          status: customer.status || "active",
-          startDate: customer.startDate,
+          status: customer.status,
         });
-        setSelectedDate(new Date(customer.startDate));
+
+        // Set subscriptions with correct dates
+        setSubscriptions(
+          customer.subscriptions.map(sub => ({
+            planId: sub.plan.id,
+            startDate: new Date(sub.startDate)
+          }))
+        );
       }
-    } else if (plans.length > 0) {
+    } else if (plans.length > 0 && subscriptions.length === 1 && !subscriptions[0].planId) {
       // Default to first plan for new customers
-      setFormData(prev => ({ ...prev, planId: plans[0].id }));
+      setSubscriptions([{ planId: plans[0].id, startDate: new Date() }]);
     }
-  }, [id, customers, plans]);
+  }, [id, customers, plans, getCustomerById]);
 
   const validateForm = () => {
     let valid = true;
@@ -84,8 +93,8 @@ export default function CustomerForm() {
       valid = false;
     }
 
-    if (!formData.planId) {
-      newErrors.planId = "Plano é obrigatório";
+    if (subscriptions.length === 0 || subscriptions.some(sub => !sub.planId)) {
+      newErrors.planId = "Pelo menos um plano é obrigatório";
       valid = false;
     }
 
@@ -98,16 +107,23 @@ export default function CustomerForm() {
 
     if (!validateForm()) return;
 
-    // Update formData with the selected date ISO string
-    const dataToSubmit = {
-      ...formData,
-      startDate: selectedDate.toISOString(),
-    };
+    // Format subscriptions for the store
+    const formattedSubscriptions = subscriptions.map(sub => ({
+      id: Math.random().toString(36).substring(2, 11),
+      planId: sub.planId,
+      startDate: sub.startDate.toISOString()
+    }));
 
     if (id) {
-      updateCustomer(id, dataToSubmit);
+      updateCustomer(id, {
+        ...formData,
+        subscriptions: formattedSubscriptions
+      });
     } else {
-      addCustomer(dataToSubmit);
+      addCustomer({
+        ...formData,
+        subscriptions: formattedSubscriptions
+      });
     }
 
     navigate("/customers");
@@ -121,13 +137,6 @@ export default function CustomerForm() {
     });
   };
 
-  const handlePlanChange = (value: string) => {
-    setFormData({
-      ...formData,
-      planId: value,
-    });
-  };
-
   const handleStatusChange = (value: "active" | "inactive") => {
     setFormData({
       ...formData,
@@ -135,9 +144,27 @@ export default function CustomerForm() {
     });
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
+  const handlePlanChange = (value: string, index: number) => {
+    const updatedSubscriptions = [...subscriptions];
+    updatedSubscriptions[index].planId = value;
+    setSubscriptions(updatedSubscriptions);
+  };
+
+  const handleDateSelect = (date: Date | undefined, index: number) => {
     if (date) {
-      setSelectedDate(date);
+      const updatedSubscriptions = [...subscriptions];
+      updatedSubscriptions[index].startDate = date;
+      setSubscriptions(updatedSubscriptions);
+    }
+  };
+
+  const addSubscription = () => {
+    setSubscriptions([...subscriptions, { planId: "", startDate: new Date() }]);
+  };
+
+  const removeSubscription = (index: number) => {
+    if (subscriptions.length > 1) {
+      setSubscriptions(subscriptions.filter((_, i) => i !== index));
     }
   };
 
@@ -194,37 +221,6 @@ export default function CustomerForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="startDate">Data de Início *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !selectedDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? (
-                      format(selectedDate, "dd/MM/yyyy")
-                    ) : (
-                      <span>Selecione a data</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateSelect}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
@@ -240,32 +236,102 @@ export default function CustomerForm() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="planId">Plano *</Label>
-              <Select
-                value={formData.planId}
-                onValueChange={handlePlanChange}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um plano" />
-                </SelectTrigger>
-                <SelectContent>
-                  {plans.map((plan) => (
-                    <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name} - R$ {plan.price.toFixed(2)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Planos *</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={addSubscription}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar Plano
+                </Button>
+              </div>
+              
               {errors.planId && (
                 <p className="text-sm text-destructive">{errors.planId}</p>
               )}
+              
               {plans.length === 0 && (
                 <p className="text-sm text-destructive">
                   Você precisa criar pelo menos um plano primeiro.
                 </p>
               )}
+              
+              <div className="space-y-4">
+                {subscriptions.map((subscription, index) => (
+                  <div key={index} className="border p-4 rounded-md space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Plano {index + 1}</h4>
+                      {subscriptions.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => removeSubscription(index)}
+                        >
+                          <Trash className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Plano</Label>
+                      <Select
+                        value={subscription.planId}
+                        onValueChange={(value) => handlePlanChange(value, index)}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um plano" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {plans.map((plan) => (
+                            <SelectItem key={plan.id} value={plan.id}>
+                              {plan.name} - {new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                              }).format(plan.price)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Data de Início</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {subscription.startDate ? (
+                              format(subscription.startDate, "dd/MM/yyyy")
+                            ) : (
+                              <span>Selecione a data</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={subscription.startDate}
+                            onSelect={(date) => handleDateSelect(date, index)}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">

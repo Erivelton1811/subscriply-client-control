@@ -1,6 +1,7 @@
+
 import { create } from 'zustand';
 import { plans as initialPlans, customers as initialCustomers } from '../data/mockData';
-import { Plan, Customer, CustomerWithPlanDetails, ReportData } from '../types';
+import { Plan, Customer, CustomerWithPlanDetails, ReportData, CustomerSubscription } from '../types';
 import { toast } from "sonner";
 
 // Initial reports configuration
@@ -65,8 +66,9 @@ interface SubscriptionState {
   deleteCustomer: (id: string) => void;
   
   // Customer subscription actions
-  assignPlanToCustomer: (customerId: string, planId: string) => void;
-  renewSubscription: (customerId: string, planId?: string) => void;
+  addSubscriptionToCustomer: (customerId: string, planId: string, startDate?: string) => void;
+  renewSubscription: (customerId: string, subscriptionId: string, planId?: string) => void;
+  removeSubscription: (customerId: string, subscriptionId: string) => void;
   
   // Report actions
   toggleReportVisibility: (reportId: string) => void;
@@ -107,7 +109,9 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   deletePlan: (id) => {
     // Check if any customer is using this plan
     const { customers } = get();
-    const isUsed = customers.some(customer => customer.planId === id);
+    const isUsed = customers.some(customer => 
+      customer.subscriptions.some(sub => sub.planId === id)
+    );
     
     if (isUsed) {
       toast.error("Não é possível excluir um plano que está em uso");
@@ -125,8 +129,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     const newCustomer = { 
       ...customer, 
       id: Math.random().toString(36).substring(2, 11),
-      status: customer.status || "active",
-      startDate: new Date().toISOString() 
     };
     
     set((state) => ({ customers: [...state.customers, newCustomer] }));
@@ -150,65 +152,97 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
   
   // Customer subscription actions
-  assignPlanToCustomer: (customerId, planId) => {
+  addSubscriptionToCustomer: (customerId, planId, startDate) => {
+    const newSubscription: CustomerSubscription = {
+      id: Math.random().toString(36).substring(2, 11),
+      planId,
+      startDate: startDate || new Date().toISOString(),
+    };
+    
     set((state) => ({
-      customers: state.customers.map((customer) => 
-        customer.id === customerId 
-          ? { ...customer, planId, startDate: new Date().toISOString() } 
+      customers: state.customers.map((customer) =>
+        customer.id === customerId
+          ? { 
+              ...customer, 
+              subscriptions: [...customer.subscriptions, newSubscription]
+            }
           : customer
       ),
     }));
-    toast.success("Plano atribuído com sucesso");
+    toast.success("Assinatura adicionada com sucesso");
   },
   
-  renewSubscription: (customerId, planId) => {
+  renewSubscription: (customerId, subscriptionId, planId) => {
     const customer = get().customers.find(c => c.id === customerId);
     if (!customer) return;
     
     const customerDetails = get().getCustomerById(customerId);
     if (!customerDetails) return;
     
-    const newPlanId = planId || customer.planId;
+    const subscriptionDetails = customerDetails.subscriptions.find(sub => sub.id === subscriptionId);
+    if (!subscriptionDetails) return;
+    
+    const newPlanId = planId || subscriptionDetails.plan.id;
     const newPlan = get().plans.find(p => p.id === newPlanId);
     if (!newPlan) return;
     
     // Calculate new start date considering remaining days
     let newStartDate = new Date();
     
-    // If customer has remaining days and is not inactive, accumulate them
-    if (customerDetails.daysRemaining > 0 && customer.status !== 'inactive') {
-      // Get current start date and add the new plan's duration to it
-      const currentEndDate = new Date(customerDetails.startDate);
-      currentEndDate.setDate(currentEndDate.getDate() + customerDetails.plan.duration);
-      
-      // Set the new start date to be today, but we'll adjust the stored date
-      // to account for the remaining days
-      newStartDate = new Date();
-      
+    // If customer has remaining days, accumulate them
+    if (subscriptionDetails.daysRemaining > 0) {
       // Adjust the stored date to account for remaining days
       // We subtract the remaining days from the current date for storage
       const adjustedStartDate = new Date();
-      adjustedStartDate.setDate(adjustedStartDate.getDate() - customerDetails.daysRemaining);
+      adjustedStartDate.setDate(adjustedStartDate.getDate() - subscriptionDetails.daysRemaining);
       
       set((state) => ({
         customers: state.customers.map((c) => 
           c.id === customerId
-            ? { ...c, planId: newPlanId, startDate: adjustedStartDate.toISOString() }
+            ? { 
+                ...c, 
+                subscriptions: c.subscriptions.map(sub => 
+                  sub.id === subscriptionId
+                    ? { ...sub, planId: newPlanId, startDate: adjustedStartDate.toISOString() }
+                    : sub
+                )
+              }
             : c
         ),
       }));
     } else {
-      // No remaining days or inactive customer, just set the new start date to today
+      // No remaining days, just set the new start date to today
       set((state) => ({
         customers: state.customers.map((c) => 
           c.id === customerId
-            ? { ...c, planId: newPlanId, startDate: newStartDate.toISOString() }
+            ? { 
+                ...c, 
+                subscriptions: c.subscriptions.map(sub => 
+                  sub.id === subscriptionId
+                    ? { ...sub, planId: newPlanId, startDate: newStartDate.toISOString() }
+                    : sub
+                )
+              }
             : c
         ),
       }));
     }
     
     toast.success("Assinatura renovada com sucesso");
+  },
+  
+  removeSubscription: (customerId, subscriptionId) => {
+    set((state) => ({
+      customers: state.customers.map((customer) =>
+        customer.id === customerId
+          ? { 
+              ...customer, 
+              subscriptions: customer.subscriptions.filter(sub => sub.id !== subscriptionId)
+            }
+          : customer
+      ),
+    }));
+    toast.success("Assinatura removida com sucesso");
   },
   
   // Report actions
@@ -227,20 +261,71 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     const { customers, plans } = get();
     
     return customers.map(customer => {
-      const plan = plans.find(p => p.id === customer.planId);
+      const subscriptionsWithDetails = customer.subscriptions.map(subscription => {
+        const plan = plans.find(p => p.id === subscription.planId);
+        if (!plan) return null;
+        
+        const startDate = new Date(subscription.startDate);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + plan.duration);
+        
+        const today = new Date();
+        const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        let status: 'active' | 'expired' | 'warning' = 'active';
+        if (daysRemaining <= 0) {
+          status = 'expired';
+        } else if (daysRemaining <= 5) {
+          status = 'warning';
+        }
+        
+        return {
+          id: subscription.id,
+          plan,
+          daysRemaining,
+          status,
+          startDate: subscription.startDate
+        };
+      }).filter(Boolean);
+      
+      if (subscriptionsWithDetails.length === 0) return null;
+      
+      return {
+        ...customer,
+        subscriptions: subscriptionsWithDetails as any
+      };
+    }).filter(Boolean) as CustomerWithPlanDetails[];
+  },
+  
+  getCustomerById: (id) => {
+    const { customers, plans } = get();
+    const customer = customers.find(c => c.id === id);
+    if (!customer) return undefined;
+    
+    // Handle inactive customers separately
+    if (customer.status === "inactive") {
+      return {
+        ...customer,
+        subscriptions: customer.subscriptions.map(subscription => {
+          const plan = plans.find(p => p.id === subscription.planId);
+          if (!plan) return null;
+          
+          return {
+            id: subscription.id,
+            plan,
+            daysRemaining: 0,
+            status: 'expired' as const,
+            startDate: subscription.startDate
+          };
+        }).filter(Boolean) as any[]
+      };
+    }
+    
+    const subscriptionsWithDetails = customer.subscriptions.map(subscription => {
+      const plan = plans.find(p => p.id === subscription.planId);
       if (!plan) return null;
       
-      // Handle inactive customers separately
-      if (customer.status === "inactive") {
-        return {
-          ...customer,
-          plan,
-          daysRemaining: 0,
-          status: 'inactive' as const
-        };
-      }
-      
-      const startDate = new Date(customer.startDate);
+      const startDate = new Date(subscription.startDate);
       const endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + plan.duration);
       
@@ -255,51 +340,19 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       }
       
       return {
-        ...customer,
+        id: subscription.id,
         plan,
         daysRemaining,
-        status
+        status,
+        startDate: subscription.startDate
       };
-    }).filter(Boolean) as CustomerWithPlanDetails[];
-  },
-  
-  getCustomerById: (id) => {
-    const { customers, plans } = get();
-    const customer = customers.find(c => c.id === id);
-    if (!customer) return undefined;
+    }).filter(Boolean);
     
-    const plan = plans.find(p => p.id === customer.planId);
-    if (!plan) return undefined;
-    
-    // Handle inactive customers separately
-    if (customer.status === "inactive") {
-      return {
-        ...customer,
-        plan,
-        daysRemaining: 0,
-        status: 'inactive' as const
-      };
-    }
-    
-    const startDate = new Date(customer.startDate);
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + plan.duration);
-    
-    const today = new Date();
-    const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    let status: 'active' | 'expired' | 'warning' = 'active';
-    if (daysRemaining <= 0) {
-      status = 'expired';
-    } else if (daysRemaining <= 5) {
-      status = 'warning';
-    }
+    if (subscriptionsWithDetails.length === 0) return undefined;
     
     return {
       ...customer,
-      plan,
-      daysRemaining,
-      status
+      subscriptions: subscriptionsWithDetails as any
     };
   },
   
@@ -308,41 +361,51 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
   
   getActiveSubscriptions: () => {
-    return get().getCustomerDetails().filter(c => c.status === 'active').length;
+    const customers = get().getCustomerDetails();
+    return customers.reduce((count, customer) => {
+      return count + customer.subscriptions.filter(sub => sub.status === 'active').length;
+    }, 0);
   },
   
   getExpiringSubscriptions: () => {
-    return get().getCustomerDetails().filter(c => c.status === 'warning').length;
+    const customers = get().getCustomerDetails();
+    return customers.reduce((count, customer) => {
+      return count + customer.subscriptions.filter(sub => sub.status === 'warning').length;
+    }, 0);
   },
   
   getExpiredSubscriptions: () => {
-    return get().getCustomerDetails().filter(c => c.status === 'expired').length;
+    const customers = get().getCustomerDetails();
+    return customers.reduce((count, customer) => {
+      return count + customer.subscriptions.filter(sub => sub.status === 'expired').length;
+    }, 0);
   },
   
   // New functions for profit calculations
   getExpectedMonthlyProfit: () => {
     const { getCustomerDetails, plans } = get();
-    
-    const activeCustomers = getCustomerDetails().filter(
-      c => c.status !== 'inactive' && (c.status === 'active' || c.status === 'warning')
-    );
+    const customers = getCustomerDetails();
     
     let totalProfit = 0;
     
-    activeCustomers.forEach(customer => {
-      const plan = plans.find(p => p.id === customer.plan.id);
-      if (!plan) return;
-      
-      // Calculate profit per plan
-      const profitPerPlan = plan.price - (plan.resalePrice || 0);
-      
-      // Calculate daily profit (profit per plan divided by duration)
-      const dailyProfit = profitPerPlan / plan.duration;
-      
-      // Calculate monthly profit (assuming 30 days in a month)
-      const monthlyProfit = dailyProfit * 30;
-      
-      totalProfit += monthlyProfit;
+    customers.forEach(customer => {
+      customer.subscriptions.forEach(subscription => {
+        if (subscription.status === 'active' || subscription.status === 'warning') {
+          const plan = plans.find(p => p.id === subscription.plan.id);
+          if (!plan) return;
+          
+          // Calculate profit per plan
+          const profitPerPlan = plan.price - (plan.resalePrice || 0);
+          
+          // Calculate daily profit (profit per plan divided by duration)
+          const dailyProfit = profitPerPlan / plan.duration;
+          
+          // Calculate monthly profit (assuming 30 days in a month)
+          const monthlyProfit = dailyProfit * 30;
+          
+          totalProfit += monthlyProfit;
+        }
+      });
     });
     
     return totalProfit;
@@ -355,14 +418,20 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   
   getAverageSubscriptionValue: () => {
     const { getCustomerDetails } = get();
+    const customers = getCustomerDetails();
     
-    const activeCustomers = getCustomerDetails().filter(
-      c => c.status !== 'inactive' && (c.status === 'active' || c.status === 'warning')
-    );
+    let totalValue = 0;
+    let totalActiveSubscriptions = 0;
     
-    if (activeCustomers.length === 0) return 0;
+    customers.forEach(customer => {
+      customer.subscriptions.forEach(subscription => {
+        if (subscription.status === 'active' || subscription.status === 'warning') {
+          totalValue += subscription.plan.price;
+          totalActiveSubscriptions++;
+        }
+      });
+    });
     
-    const totalValue = activeCustomers.reduce((sum, customer) => sum + customer.plan.price, 0);
-    return totalValue / activeCustomers.length;
+    return totalActiveSubscriptions > 0 ? totalValue / totalActiveSubscriptions : 0;
   }
 }));

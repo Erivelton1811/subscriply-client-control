@@ -53,33 +53,58 @@ export const customers: Customer[] = [
     name: "João Silva",
     email: "joao.silva@example.com",
     phone: "(11) 98765-4321",
-    planId: "plan1",
-    startDate: fifteenDaysAgo.toISOString(),
-    status: "active"
+    status: "active",
+    subscriptions: [
+      {
+        id: generateId(),
+        planId: "plan1",
+        startDate: fifteenDaysAgo.toISOString(),
+      }
+    ]
   },
   {
     id: "cust2",
     name: "Maria Oliveira",
     email: "maria.oliveira@example.com",
-    planId: "plan2",
-    startDate: thirtyDaysAgo.toISOString(),
-    status: "active"
+    status: "active",
+    subscriptions: [
+      {
+        id: generateId(),
+        planId: "plan2",
+        startDate: thirtyDaysAgo.toISOString(),
+      }
+    ]
   },
   {
     id: "cust3",
     name: "Pedro Santos",
     email: "pedro.santos@example.com",
     phone: "(21) 99876-5432",
-    planId: "plan3",
-    startDate: fiveDaysAgo.toISOString(),
-    status: "active"
+    status: "active",
+    subscriptions: [
+      {
+        id: generateId(),
+        planId: "plan3",
+        startDate: fiveDaysAgo.toISOString(),
+      },
+      {
+        id: generateId(),
+        planId: "plan1",
+        startDate: today.toISOString(),
+      }
+    ]
   },
   {
     id: "cust4",
     name: "Ana Costa",
     email: "ana.costa@example.com",
-    planId: "plan4",
-    startDate: today.toISOString(),
-    status: "active"
+    status: "active",
+    subscriptions: [
+      {
+        id: generateId(),
+        planId: "plan4",
+        startDate: today.toISOString(),
+      }
+    ]
   }
 ];

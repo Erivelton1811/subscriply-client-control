@@ -3,16 +3,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit, Trash2 } from "lucide-react";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 interface CustomerInfoCardProps {
   id: string;
   email: string;
   phone?: string;
   name: string;
-  planName: string;
-  status: 'warning' | 'expired' | 'active' | 'inactive';
-  daysRemaining: number;
+  status: 'active' | 'inactive';
   onDeleteClick: () => void;
 }
 
@@ -21,9 +18,7 @@ export function CustomerInfoCard({
   email, 
   phone, 
   name, 
-  planName, 
   status, 
-  daysRemaining, 
   onDeleteClick 
 }: CustomerInfoCardProps) {
   return (
@@ -38,23 +33,18 @@ export function CustomerInfoCard({
         </div>
         
         {phone && (
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm text-muted-foreground">Telefone</p>
-              <p>{phone}</p>
-            </div>
-            
-            {(status === "warning" || status === "expired") && phone && (
-              <WhatsAppButton 
-                phoneNumber={phone} 
-                customerName={name} 
-                planName={planName}
-                daysRemaining={daysRemaining}
-                status={status}
-              />
-            )}
+          <div>
+            <p className="text-sm text-muted-foreground">Telefone</p>
+            <p>{phone}</p>
           </div>
         )}
+        
+        <div>
+          <p className="text-sm text-muted-foreground">Status</p>
+          <p className={status === 'active' ? 'text-green-600' : 'text-gray-500'}>
+            {status === 'active' ? 'Ativo' : 'Inativo'}
+          </p>
+        </div>
         
         <div className="pt-2 flex space-x-2">
           <Button variant="outline" asChild className="flex-1">

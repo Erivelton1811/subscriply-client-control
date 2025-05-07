@@ -8,25 +8,29 @@ export interface Plan {
   description: string;
 }
 
+export interface CustomerSubscription {
+  id: string;
+  planId: string;
+  startDate: string; // ISO date string
+}
+
 export interface Customer {
   id: string;
   name: string;
   email: string;
   phone?: string;
-  planId: string;
-  startDate: string; // ISO date string
   status: 'active' | 'inactive';
+  subscriptions: CustomerSubscription[];
 }
 
-export interface CustomerWithPlanDetails {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  plan: Plan;
-  daysRemaining: number;
-  status: 'active' | 'expired' | 'warning' | 'inactive';
-  startDate: string;
+export interface CustomerWithPlanDetails extends Omit<Customer, "subscriptions"> {
+  subscriptions: Array<{
+    id: string;
+    plan: Plan;
+    daysRemaining: number;
+    status: 'active' | 'expired' | 'warning';
+    startDate: string;
+  }>;
 }
 
 // New interface for reports data
