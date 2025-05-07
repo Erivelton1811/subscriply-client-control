@@ -13,6 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CustomerForm() {
   const { id } = useParams();
@@ -28,6 +37,9 @@ export default function CustomerForm() {
     status: "active" as "active" | "inactive",
     startDate: new Date().toISOString(),
   });
+
+  // State to hold the date object for the calendar
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const [errors, setErrors] = useState({
     name: "",
@@ -47,6 +59,7 @@ export default function CustomerForm() {
           status: customer.status || "active",
           startDate: customer.startDate,
         });
+        setSelectedDate(new Date(customer.startDate));
       }
     } else if (plans.length > 0) {
       // Default to first plan for new customers
@@ -85,10 +98,16 @@ export default function CustomerForm() {
 
     if (!validateForm()) return;
 
+    // Update formData with the selected date ISO string
+    const dataToSubmit = {
+      ...formData,
+      startDate: selectedDate.toISOString(),
+    };
+
     if (id) {
-      updateCustomer(id, formData);
+      updateCustomer(id, dataToSubmit);
     } else {
-      addCustomer(formData);
+      addCustomer(dataToSubmit);
     }
 
     navigate("/customers");
@@ -114,6 +133,12 @@ export default function CustomerForm() {
       ...formData,
       status: value,
     });
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+    }
   };
 
   return (
@@ -166,6 +191,37 @@ export default function CustomerForm() {
                 onChange={handleChange}
                 placeholder="(DDD) XXXXX-XXXX"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Data de Início *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? (
+                      format(selectedDate, "dd/MM/yyyy")
+                    ) : (
+                      <span>Selecione a data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateSelect}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
