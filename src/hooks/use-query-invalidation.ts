@@ -26,8 +26,7 @@ export function useQueryInvalidation() {
     
     // Definimos os listeners para as ações do store
     const unsubscribeCustomers = useSubscriptionStore.subscribe(
-      state => state.customers,
-      () => {
+      (state) => {
         console.log("Clientes modificados, invalidando cache...");
         queryClient.invalidateQueries({ queryKey: ["customers"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -35,8 +34,7 @@ export function useQueryInvalidation() {
     );
     
     const unsubscribePlans = useSubscriptionStore.subscribe(
-      state => state.plans,
-      () => {
+      (state) => {
         console.log("Planos modificados, invalidando cache...");
         queryClient.invalidateQueries({ queryKey: ["plans"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -44,8 +42,7 @@ export function useQueryInvalidation() {
     );
     
     const unsubscribeReports = useSubscriptionStore.subscribe(
-      state => state.reports,
-      () => {
+      (state) => {
         console.log("Relatórios modificados, invalidando cache...");
         queryClient.invalidateQueries({ queryKey: ["reports"] });
       }
