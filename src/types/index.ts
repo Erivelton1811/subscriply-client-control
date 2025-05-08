@@ -50,4 +50,6 @@ export interface User {
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  users?: User[];
 }
+
