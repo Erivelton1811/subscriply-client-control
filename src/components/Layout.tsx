@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { BarChart, LayoutDashboard, LogOut, PackageOpen, Settings, Users } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
@@ -31,11 +31,7 @@ function NavItem({ to, icon: Icon, children, isActive }: NavItemProps) {
   );
 }
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export function Layout({ children }: LayoutProps) {
+export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
@@ -111,7 +107,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Main content */}
       <div className="flex-1 overflow-y-auto">
         <main className="p-6 max-w-7xl mx-auto w-full">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>

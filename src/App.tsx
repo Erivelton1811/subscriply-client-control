@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "./components/ui/sonner";
 import { ThemeProvider } from "./components/theme-provider";
-import Layout from "./components/Layout";
-import { QuerySyncManager } from "./components/QuerySyncManager"; // Importamos o novo componente
+import { Layout } from "./components/Layout";
+import { QuerySyncManager } from "./components/QuerySyncManager";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Reports from "./pages/Reports";
@@ -15,7 +15,6 @@ import CustomerDetails from "./pages/CustomerDetails";
 import CustomerForm from "./pages/CustomerForm";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
-import { WhatsAppButton } from "./components/WhatsAppButton";
 import { useAuthStore } from "./store/authStore";
 import "./App.css";
 
@@ -56,7 +55,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
-          <WhatsAppButton />
+          {/* Removendo o componente WhatsAppButton da renderização global, pois precisa de props */}
         </Router>
       </ThemeProvider>
     </QueryClientProvider>
