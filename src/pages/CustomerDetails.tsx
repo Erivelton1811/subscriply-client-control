@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSubscriptionStore } from "@/store/subscriptionStore";
+import { useCustomerById } from "@/hooks/use-customers"; // Importamos o novo hook
 
 // Import our new components
 import { CustomerHeader } from "@/components/customer-details/CustomerHeader";
@@ -13,7 +14,8 @@ import { RenewSubscriptionDialog } from "@/components/customer-details/RenewSubs
 export default function CustomerDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getCustomerById, deleteCustomer, renewSubscription, plans, removeSubscription } = useSubscriptionStore();
+  const { deleteCustomer, renewSubscription, plans, removeSubscription } = useSubscriptionStore();
+  const { customer, isLoading } = useCustomerById(id); // Usamos o novo hook
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRenewDialogOpen, setIsRenewDialogOpen] = useState(false);
@@ -25,7 +27,10 @@ export default function CustomerDetails() {
     return null;
   }
 
-  const customer = getCustomerById(id);
+  // Verifica se está carregando ou se o cliente não existe
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+  }
 
   if (!customer) {
     navigate("/customers");
