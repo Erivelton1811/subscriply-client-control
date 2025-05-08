@@ -53,3 +53,13 @@ export interface AuthState {
   users?: User[];
 }
 
+// System settings interface
+export interface SystemSettings {
+  notificationEmail: string;
+  enableEmailNotifications: boolean;
+  subscriptionWarningDays: number;
+  companyName: string;
+  companyLogo?: string;
+  allowUserRegistration: boolean;
+  theme: 'light' | 'dark' | 'system';
+}

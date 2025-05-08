@@ -1,13 +1,23 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AuthState, User } from '@/types';
+import { AuthState, SystemSettings, User } from '@/types';
 
 // Admin user credentials
 const ADMIN_USER: User = {
   username: 'eriveltonadmin',
   password: 'epa1b2c3d4',
   isAdmin: true,
+};
+
+// Default system settings
+const DEFAULT_SETTINGS: SystemSettings = {
+  notificationEmail: 'admin@example.com',
+  enableEmailNotifications: true,
+  subscriptionWarningDays: 7,
+  companyName: 'Subscriply',
+  allowUserRegistration: false,
+  theme: 'light',
 };
 
 interface AuthStore extends AuthState {
@@ -17,6 +27,9 @@ interface AuthStore extends AuthState {
   updateUser: (originalUsername: string, username: string, password?: string, isAdmin?: boolean) => void;
   deleteUser: (username: string) => void;
   getUsers: () => User[];
+  // System settings
+  settings: SystemSettings;
+  updateSettings: (newSettings: Partial<SystemSettings>) => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -25,6 +38,7 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       isAuthenticated: false,
       users: [ADMIN_USER],
+      settings: DEFAULT_SETTINGS,
       login: (username, password) => {
         // Get current users from store
         const users = get().users || [ADMIN_USER];
@@ -104,10 +118,18 @@ export const useAuthStore = create<AuthStore>()(
         const state = get();
         return state.users || [ADMIN_USER];
       },
+      // System settings methods
+      updateSettings: (newSettings) => {
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            ...newSettings,
+          }
+        }));
+      }
     }),
     {
       name: 'auth-storage',
     }
   )
 );
-

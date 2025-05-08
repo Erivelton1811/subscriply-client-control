@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Settings, Users, Eye, Edit } from "lucide-react";
+import { UserPlus, Settings, Users, Eye, Edit, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,20 +11,24 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { SystemSettingsForm } from "@/components/admin/SystemSettingsForm";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const { user, addUser, getUsers } = useAuthStore();
+  const { user, addUser, updateUser, deleteUser, getUsers } = useAuthStore();
   const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [viewUserDialogOpen, setViewUserDialogOpen] = useState(false);
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   
   // Form states
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newIsAdmin, setNewIsAdmin] = useState(false);
+  const [originalUsername, setOriginalUsername] = useState("");
   
   // Protect admin panel from unauthorized access
   React.useEffect(() => {
@@ -51,24 +55,40 @@ export default function AdminPanel() {
   };
   
   // View user details
-  const handleViewUser = (user) => {
+  const handleViewUser = (user: any) => {
     setSelectedUser(user);
     setViewUserDialogOpen(true);
   };
   
   // Edit user
-  const handleEditUser = (user) => {
+  const handleEditUser = (user: any) => {
     setSelectedUser(user);
+    setOriginalUsername(user.username);
     setNewUsername(user.username);
     setNewPassword("");
     setNewIsAdmin(user.isAdmin);
     setEditUserDialogOpen(true);
   };
   
+  // Confirm delete user
+  const handleConfirmDeleteUser = (user: any) => {
+    setSelectedUser(user);
+    setDeleteUserDialogOpen(true);
+  };
+  
+  // Delete user
+  const handleDeleteUser = () => {
+    if (selectedUser) {
+      deleteUser(selectedUser.username);
+      toast.success('Usuário removido com sucesso!');
+      setDeleteUserDialogOpen(false);
+    }
+  };
+  
   // Save edited user
   const handleSaveUser = () => {
     if (newUsername) {
-      // In a real implementation, you would update the user in the store
+      updateUser(originalUsername, newUsername, newPassword || undefined, newIsAdmin);
       toast.success('Usuário atualizado com sucesso!');
       setEditUserDialogOpen(false);
     } else {
@@ -124,6 +144,11 @@ export default function AdminPanel() {
                               <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
+                              {user.username !== 'eriveltonadmin' && (
+                                <Button variant="ghost" size="sm" onClick={() => handleConfirmDeleteUser(user)}>
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -279,26 +304,39 @@ export default function AdminPanel() {
         </DialogContent>
       </Dialog>
       
+      {/* Delete User Confirmation Dialog */}
+      <AlertDialog open={deleteUserDialogOpen} onOpenChange={setDeleteUserDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o usuário "{selectedUser?.username}"? 
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteUserDialogOpen(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
       {/* System Settings Dialog */}
       <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Configurações do Sistema</DialogTitle>
             <DialogDescription>
               Gerencie as configurações gerais do sistema.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-center text-muted-foreground">
-              As configurações avançadas do sistema serão implementadas em breve.
-            </p>
+          <div className="py-4">
+            <SystemSettingsForm />
           </div>
-          <DialogFooter>
-            <Button onClick={() => setSettingsDialogOpen(false)}>Fechar</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
-
