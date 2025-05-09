@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,7 +27,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Edit, Trash2, Plus, Search, UserPlus, Users, EyeIcon, Filter, ArrowUpDown } from "lucide-react";
+import { Edit, Trash2, Plus, Search, UserPlus, Users, EyeIcon, Filter, ArrowUpDown, RotateCcw } from "lucide-react";
 import { Customer, CustomerWithPlanDetails } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -43,8 +42,10 @@ export default function Customers() {
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [sortField, setSortField] = useState<string>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const deleteCustomer = useSubscriptionStore(state => state.deleteCustomer);
+  const resetToInitialData = useSubscriptionStore(state => state.resetToInitialData);
   
   // Use the custom hook for customers data
   const customers = useCustomers();
@@ -123,6 +124,13 @@ export default function Customers() {
     }
   };
 
+  const handleReset = () => {
+    resetToInitialData();
+    queryClient.invalidateQueries({ queryKey: ["customers"] });
+    setResetDialogOpen(false);
+    toast.success("Dados redefinidos com sucesso");
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
@@ -133,12 +141,22 @@ export default function Customers() {
           </div>
           <p className="text-muted-foreground">Gerencie os clientes e suas assinaturas</p>
         </div>
-        <Link to="/customers/new">
-          <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Adicionar Cliente
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1" 
+            onClick={() => setResetDialogOpen(true)}
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Redefinir dados
           </Button>
-        </Link>
+          <Link to="/customers/new">
+            <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Adicionar Cliente
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Separator />
@@ -327,6 +345,27 @@ export default function Customers() {
             </Button>
             <Button type="button" variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
               {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de confirmação para redefinir dados */}
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Redefinir Dados</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja redefinir todos os dados para o estado inicial? 
+              Isso irá restaurar os clientes e planos padrão e remover todas as alterações feitas.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setResetDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="default" onClick={handleReset}>
+              Confirmar Redefinição
             </Button>
           </DialogFooter>
         </DialogContent>

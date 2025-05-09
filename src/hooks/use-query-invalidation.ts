@@ -1,60 +1,30 @@
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { useAuthStore } from "@/store/authStore";
-import { useSubscriptionStore } from "@/store/subscriptionStore";
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
- * Hook para sincronizar dados e invalidar caches automaticamente quando houver mudanças
+ * Hook para gerenciar a invalidação de consultas React Query
+ * Usado para garantir que as consultas sejam atualizadas quando os dados do store mudam
  */
 export function useQueryInvalidation() {
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuthStore();
   
-  // Função para invalidar todos os caches relevantes
-  const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["customers"] });
-    queryClient.invalidateQueries({ queryKey: ["plans"] });
-    queryClient.invalidateQueries({ queryKey: ["reports"] });
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-  };
-
-  // Usamos useEffect para monitorar mudanças em estados relevantes
+  // Monitora mudanças no localStorage para dados persistentes
   useEffect(() => {
-    // Só sincronizamos se o usuário estiver autenticado
-    if (!isAuthenticated) return;
-    
-    // Definimos os listeners para as ações do store
-    const unsubscribeCustomers = useSubscriptionStore.subscribe((state) => {
-      // Verificamos se houve mudanças nos clientes
-      console.log("Clientes modificados, invalidando cache...");
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    });
-    
-    const unsubscribePlans = useSubscriptionStore.subscribe((state) => {
-      // Verificamos se houve mudanças nos planos
-      console.log("Planos modificados, invalidando cache...");
-      queryClient.invalidateQueries({ queryKey: ["plans"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    });
-    
-    const unsubscribeReports = useSubscriptionStore.subscribe((state) => {
-      // Verificamos se houve mudanças nos relatórios
-      console.log("Relatórios modificados, invalidando cache...");
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
-    });
-    
-    // Invalidamos tudo ao montar o componente
-    invalidateAll();
-    
-    // Limpeza dos listeners ao desmontar
-    return () => {
-      unsubscribeCustomers();
-      unsubscribePlans();
-      unsubscribeReports();
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'subscriply-storage') {
+        // Quando os dados persistidos mudarem, invalida as queries para forçar recarregamento
+        console.log('Dados persistidos foram alterados, invalidando consultas...');
+        queryClient.invalidateQueries({ queryKey: ['customers'] });
+      }
     };
-  }, [queryClient, isAuthenticated]);
-
-  return { invalidateAll };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [queryClient]);
+  
+  return null;
 }
