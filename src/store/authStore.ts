@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AuthState, SystemSettings, User } from '@/types';
+import { toast } from 'sonner';
 
 // Admin user credentials
 const ADMIN_USER: User = {
@@ -25,7 +26,7 @@ interface AuthStore extends AuthState {
   logout: () => void;
   addUser: (username: string, password: string, isAdmin: boolean) => void;
   updateUser: (originalUsername: string, username: string, password?: string, isAdmin?: boolean) => void;
-  deleteUser: (username: string) => void;
+  deleteUser: (username: string) => boolean; // Alterado para retornar boolean para indicar sucesso/falha
   getUsers: () => User[];
   // System settings
   settings: SystemSettings;
@@ -89,7 +90,7 @@ export const useAuthStore = create<AuthStore>()(
             return user;
           });
           
-          // If the currently logged in user was updated, update the user state too
+          // Se o usuário logado foi atualizado, atualize também o estado do usuário
           if (state.user && state.user.username === originalUsername) {
             const updatedUser = updatedUsers.find(user => user.username === username);
             return {
@@ -102,23 +103,34 @@ export const useAuthStore = create<AuthStore>()(
         });
       },
       deleteUser: (username) => {
-        set((state) => {
-          // Don't allow deleting the admin user
-          if (username === ADMIN_USER.username) {
-            return state;
-          }
-          
-          const users = state.users || [ADMIN_USER];
-          return {
-            users: users.filter((user) => user.username !== username),
-          };
-        });
+        // Não permitir exclusão do usuário admin principal
+        if (username === ADMIN_USER.username) {
+          toast.error("Não é permitido excluir o administrador principal do sistema.");
+          return false;
+        }
+        
+        const currentState = get();
+        const users = currentState.users || [ADMIN_USER];
+        
+        // Verificar se o usuário a ser excluído existe
+        if (!users.some(user => user.username === username)) {
+          toast.error("Usuário não encontrado.");
+          return false;
+        }
+        
+        // Filtrar o usuário a ser excluído
+        const updatedUsers = users.filter((user) => user.username !== username);
+        
+        // Atualizar o estado
+        set({ users: updatedUsers });
+        toast.success("Usuário excluído com sucesso.");
+        return true;
       },
       getUsers: () => {
         const state = get();
         return state.users || [ADMIN_USER];
       },
-      // System settings methods
+      // Métodos de configurações do sistema
       updateSettings: (newSettings) => {
         set((state) => ({
           settings: {

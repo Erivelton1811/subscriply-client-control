@@ -25,28 +25,25 @@ export function useQueryInvalidation() {
     if (!isAuthenticated) return;
     
     // Definimos os listeners para as ações do store
-    const unsubscribeCustomers = useSubscriptionStore.subscribe(
-      (state) => {
-        console.log("Clientes modificados, invalidando cache...");
-        queryClient.invalidateQueries({ queryKey: ["customers"] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      }
-    );
+    const unsubscribeCustomers = useSubscriptionStore.subscribe((state) => {
+      // Verificamos se houve mudanças nos clientes
+      console.log("Clientes modificados, invalidando cache...");
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    });
     
-    const unsubscribePlans = useSubscriptionStore.subscribe(
-      (state) => {
-        console.log("Planos modificados, invalidando cache...");
-        queryClient.invalidateQueries({ queryKey: ["plans"] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      }
-    );
+    const unsubscribePlans = useSubscriptionStore.subscribe((state) => {
+      // Verificamos se houve mudanças nos planos
+      console.log("Planos modificados, invalidando cache...");
+      queryClient.invalidateQueries({ queryKey: ["plans"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    });
     
-    const unsubscribeReports = useSubscriptionStore.subscribe(
-      (state) => {
-        console.log("Relatórios modificados, invalidando cache...");
-        queryClient.invalidateQueries({ queryKey: ["reports"] });
-      }
-    );
+    const unsubscribeReports = useSubscriptionStore.subscribe((state) => {
+      // Verificamos se houve mudanças nos relatórios
+      console.log("Relatórios modificados, invalidando cache...");
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+    });
     
     // Invalidamos tudo ao montar o componente
     invalidateAll();
