@@ -31,8 +31,9 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Adicionar listener para erros na API e mostrar toast de erro
-supabase.handleApiError = (error: any) => {
+// Set up an error handler function instead of directly attaching to the client
+// This can be used with try/catch blocks when making Supabase API calls
+export const handleApiError = (error: any) => {
   console.error('Supabase API Error:', error);
   toast.error(error.message || 'Ocorreu um erro ao comunicar com o servidor');
   return error;
