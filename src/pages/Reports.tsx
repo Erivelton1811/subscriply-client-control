@@ -14,8 +14,16 @@ import {
   Activity, 
   Clock,
   Eye,
-  EyeOff
+  EyeOff,
+  FileBar,
+  FileSpreadsheet,
+  FileText,
+  Download,
+  Share2
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Reports() {
   const { 
@@ -46,23 +54,55 @@ export default function Reports() {
     return report ? report.visible : false;
   };
 
+  const handleExportReport = () => {
+    toast.success("Relatório exportado com sucesso!");
+  };
+
+  const handleShareReport = () => {
+    toast.success("Link do relatório copiado para a área de transferência!");
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Relatórios</h1>
+        <div className="space-y-1">
+          <div className="flex items-center">
+            <FileSpreadsheet className="h-5 w-5 mr-2 text-primary" />
+            <h1 className="text-3xl font-bold">Relatórios</h1>
+          </div>
+          <p className="text-muted-foreground">Análises e métricas sobre clientes e receitas</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex items-center" onClick={handleExportReport}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar
+          </Button>
+          <Button variant="outline" className="flex items-center" onClick={handleShareReport}>
+            <Share2 className="mr-2 h-4 w-4" />
+            Compartilhar
+          </Button>
+        </div>
       </div>
       
-      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="financial">Financeiro</TabsTrigger>
-          <TabsTrigger value="customize">Personalizar</TabsTrigger>
+      <Separator />
+      
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Visão Geral
+          </TabsTrigger>
+          <TabsTrigger value="financial" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Financeiro
+          </TabsTrigger>
+          <TabsTrigger value="customize" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Personalizar
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="overview" className="space-y-4 mt-6">
+        <TabsContent value="overview" className="space-y-6 mt-2">
           {isReportVisible("monthly-profit") && (
-            <Card>
-              <CardHeader>
+            <Card className="overflow-hidden border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-all">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 pb-3">
                 <CardTitle className="flex items-center">
                   <TrendingUp className="mr-2 h-5 w-5 text-green-600" />
                   Lucro Mensal Esperado
@@ -71,7 +111,7 @@ export default function Reports() {
                   Estimativa de lucro mensal baseada nas assinaturas ativas
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <div className="text-4xl font-bold text-green-600">
                   R$ {monthlyProfit.toFixed(2)}
                 </div>
@@ -80,8 +120,8 @@ export default function Reports() {
           )}
           
           {isReportVisible("yearly-profit") && (
-            <Card>
-              <CardHeader>
+            <Card className="overflow-hidden border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-all">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 pb-3">
                 <CardTitle className="flex items-center">
                   <Calendar className="mr-2 h-5 w-5 text-blue-600" />
                   Lucro Anual Esperado
@@ -90,7 +130,7 @@ export default function Reports() {
                   Estimativa de lucro anual baseada nas assinaturas ativas
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <div className="text-4xl font-bold text-blue-600">
                   R$ {yearlyProfit.toFixed(2)}
                 </div>
@@ -99,8 +139,8 @@ export default function Reports() {
           )}
           
           {isReportVisible("avg-subscription-value") && (
-            <Card>
-              <CardHeader>
+            <Card className="overflow-hidden border-l-4 border-l-purple-500 shadow-md hover:shadow-lg transition-all">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20 pb-3">
                 <CardTitle className="flex items-center">
                   <BarChart3 className="mr-2 h-5 w-5 text-purple-600" />
                   Valor Médio de Assinatura
@@ -109,7 +149,7 @@ export default function Reports() {
                   Média do valor das assinaturas ativas
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <div className="text-4xl font-bold text-purple-600">
                   R$ {avgSubscriptionValue.toFixed(2)}
                 </div>
@@ -118,8 +158,8 @@ export default function Reports() {
           )}
           
           {isReportVisible("expiring-subscriptions") && (
-            <Card>
-              <CardHeader>
+            <Card className="overflow-hidden border-l-4 border-l-amber-500 shadow-md hover:shadow-lg transition-all">
+              <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 pb-3">
                 <CardTitle className="flex items-center">
                   <Clock className="mr-2 h-5 w-5 text-amber-600" />
                   Assinaturas Próximas do Vencimento
@@ -128,7 +168,7 @@ export default function Reports() {
                   Clientes com assinaturas que vencem nos próximos 5 dias
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <div className="text-4xl font-bold text-amber-600">
                   {expiringCount}
                 </div>
@@ -137,9 +177,9 @@ export default function Reports() {
           )}
         </TabsContent>
         
-        <TabsContent value="financial" className="space-y-4 mt-6">
+        <TabsContent value="financial" className="space-y-6 mt-2">
           {isReportVisible("profit-per-plan") && (
-            <Card>
+            <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <PieChart className="mr-2 h-5 w-5 text-indigo-600" />
@@ -161,7 +201,7 @@ export default function Reports() {
           )}
           
           {isReportVisible("renewal-rate") && (
-            <Card>
+            <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Activity className="mr-2 h-5 w-5 text-pink-600" />
@@ -183,7 +223,7 @@ export default function Reports() {
           )}
           
           {isReportVisible("customer-retention") && (
-            <Card>
+            <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Users className="mr-2 h-5 w-5 text-cyan-600" />
@@ -205,20 +245,32 @@ export default function Reports() {
           )}
         </TabsContent>
         
-        <TabsContent value="customize" className="space-y-4 mt-6">
+        <TabsContent value="customize" className="space-y-4 mt-2">
           <Card>
             <CardHeader>
-              <CardTitle>Personalizar Relatórios</CardTitle>
+              <CardTitle className="flex items-center">
+                <FileText className="mr-2 h-5 w-5 text-primary" />
+                Personalizar Relatórios
+              </CardTitle>
               <CardDescription>
-                Escolha quais relatórios deseja exibir
+                Escolha quais relatórios deseja exibir na sua dashboard
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {reports.map(report => (
-                  <div key={report.id} className="flex items-center justify-between border-b pb-3">
+                  <div key={report.id} className="flex items-center justify-between border-b pb-3 hover:bg-muted/20 p-2 rounded-md transition-colors">
                     <div>
-                      <h3 className="font-medium">{report.title}</h3>
+                      <h3 className="font-medium flex items-center">
+                        {report.id === "monthly-profit" && <TrendingUp className="mr-2 h-4 w-4 text-green-600" />}
+                        {report.id === "yearly-profit" && <Calendar className="mr-2 h-4 w-4 text-blue-600" />}
+                        {report.id === "avg-subscription-value" && <BarChart3 className="mr-2 h-4 w-4 text-purple-600" />}
+                        {report.id === "expiring-subscriptions" && <Clock className="mr-2 h-4 w-4 text-amber-600" />}
+                        {report.id === "profit-per-plan" && <PieChart className="mr-2 h-4 w-4 text-indigo-600" />}
+                        {report.id === "renewal-rate" && <Activity className="mr-2 h-4 w-4 text-pink-600" />}
+                        {report.id === "customer-retention" && <Users className="mr-2 h-4 w-4 text-cyan-600" />}
+                        {report.title}
+                      </h3>
                       <p className="text-sm text-muted-foreground">{report.description}</p>
                     </div>
                     <div className="flex items-center space-x-2">

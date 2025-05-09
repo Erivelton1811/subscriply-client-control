@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/toast";
 import { CheckCircle, AlertCircle, Info, XCircle } from "lucide-react";
 
+// Add custom variants to the toast types
+type ExtendedVariant = "default" | "destructive" | "success" | "warning";
+
 export function Toaster() {
   const { toasts } = useToast();
 
@@ -18,25 +21,26 @@ export function Toaster() {
       {toasts.map(function ({ id, title, description, action, variant, ...props }) {
         let Icon = Info;
         
-        // Using a type-safe comparison - "success" and "warning" are not part of the default variant types
-        // so we need to handle them as custom string values
-        if (variant === "destructive") {
+        // Using our extended variant type for proper type checking
+        const toastVariant = variant as ExtendedVariant;
+        
+        if (toastVariant === "destructive") {
           Icon = XCircle;
-        } else if (variant === "success" as any) {
+        } else if (toastVariant === "success") {
           Icon = CheckCircle;
-        } else if (variant === "warning" as any) {
+        } else if (toastVariant === "warning") {
           Icon = AlertCircle;
         }
         
         return (
-          <Toast key={id} {...props} className="shadow-lg">
+          <Toast key={id} {...props} className="shadow-lg border transition-all duration-200 animate-fade-in">
             <div className="grid gap-1 items-center grid-cols-[auto_1fr] px-1">
-              {variant && (
+              {toastVariant && (
                 <div className="mr-2">
                   <Icon className={`h-5 w-5 ${
-                    variant === "destructive" ? "text-destructive" : 
-                    (variant as any) === "success" ? "text-green-500" :
-                    (variant as any) === "warning" ? "text-yellow-500" : "text-blue-500"
+                    toastVariant === "destructive" ? "text-destructive" : 
+                    toastVariant === "success" ? "text-green-500" :
+                    toastVariant === "warning" ? "text-yellow-500" : "text-blue-500"
                   }`} />
                 </div>
               )}

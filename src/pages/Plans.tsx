@@ -8,9 +8,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Tag, CalendarDays, ScrollText } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +21,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 export default function Plans() {
   const { plans, deletePlan } = useSubscriptionStore();
@@ -41,59 +44,81 @@ export default function Plans() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Planos</h1>
-        <Button asChild>
-          <Link to="/plans/new">
+        <h1 className="text-3xl font-bold tracking-tight">Planos</h1>
+        <Button asChild className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+          <Link to="/plans/new" className="flex items-center">
             <Plus className="mr-2 h-4 w-4" />
             Novo Plano
           </Link>
         </Button>
       </div>
+      
+      <Separator />
 
       {plans.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => (
-            <Card key={plan.id} className="overflow-hidden">
-              <CardHeader>
-                <CardTitle>{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
+            <Card key={plan.id} className="overflow-hidden hover:shadow-lg transition-all border-t-4 border-t-primary">
+              <CardHeader className="bg-gradient-to-r from-muted/50 to-background pb-3">
+                <Badge variant="outline" className="w-fit mb-2 bg-primary/10 hover:bg-primary/20 transition-colors">
+                  {plan.id.substring(0, 8)}
+                </Badge>
+                <CardTitle className="flex items-center">
+                  <Tag className="h-5 w-5 mr-2 text-primary" />
+                  {plan.name}
+                </CardTitle>
+                <CardDescription className="line-clamp-2">{plan.description}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <div className="space-y-4">
-                  <div className="text-3xl font-bold">
+                  <div className="text-3xl font-bold text-primary">
                     {formatPrice(plan.price)}
                   </div>
-                  <p className="text-sm text-muted-foreground">
+
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <CalendarDays className="h-4 w-4 mr-1 text-muted-foreground" />
                     Duração: {plan.duration} dias
-                  </p>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" asChild className="flex-1">
-                      <Link to={`/plans/${plan.id}/edit`}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Editar
-                      </Link>
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      className="flex-1"
-                      onClick={() => setPlanToDelete(plan.id)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir
-                    </Button>
                   </div>
+
+                  {plan.resalePrice && plan.resalePrice > 0 && (
+                    <div className="flex items-center">
+                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-300">
+                        Revenda: {formatPrice(plan.resalePrice)}
+                      </Badge>
+                      <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300">
+                        Lucro: {formatPrice(plan.resalePrice - plan.price)}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </CardContent>
+              <CardFooter className="flex gap-2 border-t pt-4 bg-muted/20">
+                <Button variant="outline" asChild className="flex-1 hover:bg-primary/10 hover:text-primary">
+                  <Link to={`/plans/${plan.id}/edit`} className="flex items-center justify-center">
+                    <Edit className="mr-2 h-4 w-4" />
+                    Editar
+                  </Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setPlanToDelete(plan.id)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir
+                </Button>
+              </CardFooter>
             </Card>
           ))}
         </div>
       ) : (
         <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground mb-4">Nenhum plano cadastrado</p>
-            <Button asChild>
+          <CardContent className="py-12 text-center space-y-4">
+            <ScrollText className="h-12 w-12 text-muted-foreground mx-auto opacity-50" />
+            <p className="text-muted-foreground">Nenhum plano cadastrado</p>
+            <Button asChild className="mt-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
               <Link to="/plans/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Primeiro Plano
@@ -104,7 +129,7 @@ export default function Plans() {
       )}
 
       <AlertDialog open={planToDelete !== null} onOpenChange={() => setPlanToDelete(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-t-4 border-t-destructive">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
@@ -113,7 +138,9 @@ export default function Plans() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
