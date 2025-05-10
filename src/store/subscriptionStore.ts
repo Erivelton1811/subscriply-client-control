@@ -13,8 +13,8 @@ export const useSubscriptionStore = create<SubscriptionState>()(
   persist(
     (set, get, api) => ({
       // Inicializar os planos e clientes com os dados mockados
-      plans: initialPlans,
-      customers: initialCustomers,
+      plans: [],
+      customers: [],
       
       // Combinar todos os slices
       ...createPlansSlice(set, get, api),
@@ -30,6 +30,19 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         customers: state.customers,
         reports: state.reports
       }),
+      onRehydrateStorage: () => (state) => {
+        // Verificar se há dados após o carregamento
+        if (!state) return;
+        
+        // Se não houver dados de clientes ou planos, carregar os dados iniciais
+        if ((!state.customers || state.customers.length === 0) && 
+            (!state.plans || state.plans.length === 0)) {
+          setTimeout(() => {
+            // Usar o resetToInitialData após o componente estar montado
+            useSubscriptionStore.getState().resetToInitialData();
+          }, 0);
+        }
+      }
     }
   )
 );
