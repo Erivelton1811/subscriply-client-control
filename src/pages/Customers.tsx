@@ -35,6 +35,7 @@ import { useCustomers } from "@/hooks/use-customers";
 import { useSubscriptionStore } from "@/store/subscriptionStore";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Customers() {
   const [search, setSearch] = useState("");
@@ -46,9 +47,10 @@ export default function Customers() {
   const queryClient = useQueryClient();
   const deleteCustomer = useSubscriptionStore(state => state.deleteCustomer);
   const resetToInitialData = useSubscriptionStore(state => state.resetToInitialData);
+  const currentUser = useAuthStore(state => state.user);
   
   // Use the custom hook for customers data
-  const customers = useCustomers();
+  const { customers = [], isLoading } = useCustomers();
 
   const { mutate: removeCustomer, isPending: isDeleting } = useMutation({
     mutationFn: (id: string) => {
@@ -130,6 +132,29 @@ export default function Customers() {
     setResetDialogOpen(false);
     toast.success("Dados redefinidos com sucesso");
   };
+
+  // Verificar se o usuário está logado
+  if (!currentUser) {
+    return (
+      <Card className="max-w-2xl mx-auto p-6">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Acesso Restrito</h2>
+          <p>Você precisa estar logado para visualizar os clientes.</p>
+          <Button asChild>
+            <Link to="/login">Fazer Login</Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg text-muted-foreground">Carregando clientes...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

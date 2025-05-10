@@ -16,16 +16,16 @@ export const createSystemSlice: StateCreator<
     const username = currentUser ? currentUser.username : 'default';
     
     // Verificar se já existem dados no state atual
-    const currentPlans = get().plans;
-    const currentCustomers = get().customers;
+    const currentPlans = get().plans.filter(p => p.userId === username);
+    const currentCustomers = get().customers.filter(c => c.userId === username);
     
     // Se já existem dados, não resetar
     if (currentPlans.length > 0 || currentCustomers.length > 0) {
-      toast.info("Dados existentes mantidos");
+      toast.info("Dados existentes mantidos para este usuário");
       return;
     }
     
-    // Só adiciona dados iniciais se não houver dados existentes
+    // Só adiciona dados iniciais se não houver dados existentes para este usuário
     // Adicionar userId aos planos e clientes iniciais
     const plansWithUserId = initialPlans.map(plan => ({
       ...plan,
@@ -37,10 +37,18 @@ export const createSystemSlice: StateCreator<
       userId: username
     }));
     
-    set({
-      plans: plansWithUserId,
-      customers: customersWithUserId,
-    });
+    // Manter planos e clientes de outros usuários e adicionar os novos
+    set((state) => ({
+      plans: [
+        ...state.plans.filter(p => p.userId !== username), 
+        ...plansWithUserId
+      ],
+      customers: [
+        ...state.customers.filter(c => c.userId !== username),
+        ...customersWithUserId
+      ],
+    }));
+    
     toast.success("Dados iniciais carregados");
   },
 });

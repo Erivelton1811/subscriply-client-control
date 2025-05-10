@@ -13,7 +13,7 @@ export function useCustomers() {
   const currentUser = useAuthStore(state => state.user);
   const queryClient = useQueryClient();
   
-  const { data = [] } = useQuery({
+  const { data = [], isLoading } = useQuery({
     queryKey: ["customers", currentUser?.username],
     queryFn: () => {
       console.log(`Buscando dados atualizados de clientes para o usuário: ${currentUser?.username}`);
@@ -26,7 +26,7 @@ export function useCustomers() {
     enabled: !!currentUser,
   });
   
-  return data;
+  return { customers: data, isLoading };
 }
 
 /**

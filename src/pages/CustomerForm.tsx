@@ -71,6 +71,7 @@ export default function CustomerForm() {
         updateCustomer(id, {
           ...data,
         });
+        toast.success("Cliente atualizado com sucesso");
       } else {
         // Modo de criação - garantindo que todos os campos obrigatórios estejam presentes
         addCustomer({
@@ -81,6 +82,7 @@ export default function CustomerForm() {
           subscriptions: [],
           userId: currentUser.username
         });
+        toast.success("Cliente criado com sucesso");
       }
       
       // Atualizar cache do React Query
@@ -90,11 +92,28 @@ export default function CustomerForm() {
       navigate("/customers");
     } catch (error) {
       console.error("Erro ao salvar cliente:", error);
-      toast.error("Erro ao salvar cliente");
+      toast.error(`Erro ao salvar cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Verificar se o usuário está logado
+  if (!currentUser) {
+    return (
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Acesso Restrito</CardTitle>
+          <CardDescription>
+            Você precisa estar logado para acessar esta página.
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button onClick={() => navigate("/login")}>Fazer Login</Button>
+        </CardFooter>
+      </Card>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">

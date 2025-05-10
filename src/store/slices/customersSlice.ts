@@ -20,6 +20,16 @@ export const createCustomersSlice: StateCreator<
       return;
     }
     
+    // Verificar se já existe um cliente com o mesmo email para este usuário
+    const existingCustomer = get().customers.find(
+      c => c.email === customer.email && c.userId === currentUser.username
+    );
+    
+    if (existingCustomer) {
+      toast.error("Já existe um cliente com este email");
+      return;
+    }
+    
     const newCustomer = { 
       ...customer, 
       id: Math.random().toString(36).substring(2, 11),
@@ -35,6 +45,20 @@ export const createCustomersSlice: StateCreator<
     if (!currentUser) {
       toast.error("Você precisa estar logado para atualizar um cliente");
       return;
+    }
+    
+    // Verificar se já existe outro cliente com o mesmo email para este usuário
+    if (updatedCustomer.email) {
+      const existingCustomer = get().customers.find(
+        c => c.email === updatedCustomer.email && 
+            c.userId === currentUser.username && 
+            c.id !== id
+      );
+      
+      if (existingCustomer) {
+        toast.error("Já existe outro cliente com este email");
+        return;
+      }
     }
     
     set((state) => ({
