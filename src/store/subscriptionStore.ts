@@ -12,7 +12,7 @@ import { plans as initialPlans, customers as initialCustomers } from '../data/mo
 export const useSubscriptionStore = create<SubscriptionState>()(
   persist(
     (set, get, api) => ({
-      // Inicializar os planos e clientes com os dados mockados
+      // Inicializar planos e clientes vazios; os dados serão carregados do localStorage ou mockData
       plans: [],
       customers: [],
       
@@ -32,13 +32,23 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       }),
       onRehydrateStorage: () => (state) => {
         // Verificar se há dados após o carregamento
-        if (!state) return;
+        if (!state) {
+          console.log("Nenhum estado encontrado no localStorage, carregando dados iniciais...");
+          setTimeout(() => {
+            useSubscriptionStore.getState().resetToInitialData();
+          }, 0);
+          return;
+        }
         
-        // Se não houver dados de clientes ou planos, carregar os dados iniciais
+        console.log("Estado recarregado do localStorage:", 
+                   `Planos: ${state.plans?.length || 0}`, 
+                   `Clientes: ${state.customers?.length || 0}`);
+        
+        // Somente carregar dados iniciais se não houver dados no localStorage
         if ((!state.customers || state.customers.length === 0) && 
             (!state.plans || state.plans.length === 0)) {
+          console.log("Nenhum dado encontrado, carregando dados iniciais...");
           setTimeout(() => {
-            // Usar o resetToInitialData após o componente estar montado
             useSubscriptionStore.getState().resetToInitialData();
           }, 0);
         }

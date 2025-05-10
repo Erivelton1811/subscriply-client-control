@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSubscriptionStore } from "@/store/subscriptionStore";
 import { useAuthStore } from "@/store/authStore";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres." }),
@@ -55,7 +56,7 @@ export default function CustomerForm() {
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     if (!currentUser) {
-      console.error("Usuário não autenticado");
+      toast.error("Usuário não autenticado");
       return;
     }
     
@@ -67,11 +68,14 @@ export default function CustomerForm() {
           ...data,
         });
       } else {
-        // Modo de criação
+        // Modo de criação - garantindo que todos os campos obrigatórios estejam presentes
         addCustomer({
-          ...data,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          status: data.status,
           subscriptions: [],
-          userId: currentUser.username // Garantir que o userId está sendo definido
+          userId: currentUser.username
         });
       }
       
@@ -82,6 +86,7 @@ export default function CustomerForm() {
       navigate("/customers");
     } catch (error) {
       console.error("Erro ao salvar cliente:", error);
+      toast.error("Erro ao salvar cliente");
     } finally {
       setIsSubmitting(false);
     }
