@@ -55,7 +55,7 @@ const fiveDaysAgo = new Date();
 fiveDaysAgo.setDate(today.getDate() - 5);
 
 // Adicionando userId para todos os clientes
-const defaultUserId = "eriveltonadmin"; // ID do usuário admin padrão
+// Using the defaultUserId already declared above
 
 export const customers: Customer[] = [
   {
