@@ -6,6 +6,7 @@ export interface Plan {
   resalePrice?: number;
   duration: number;
   description: string;
+  userId: string; // Adicionado para associar plano ao usuário
 }
 
 export interface CustomerSubscription {

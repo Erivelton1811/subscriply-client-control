@@ -3,7 +3,7 @@ import { StateCreator } from 'zustand';
 import { SubscriptionState, CustomersSlice } from '../types';
 import { CustomerWithPlanDetails } from '@/types';
 import { toast } from "sonner";
-import { useAuthStore } from '../authStore'; // Importamos o authStore
+import { useAuthStore } from '../authStore';
 
 export const createCustomersSlice: StateCreator<
   SubscriptionState,
@@ -31,22 +31,44 @@ export const createCustomersSlice: StateCreator<
   },
   
   updateCustomer: (id, updatedCustomer) => {
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) {
+      toast.error("Você precisa estar logado para atualizar um cliente");
+      return;
+    }
+    
     set((state) => ({
       customers: state.customers.map((customer) => 
-        customer.id === id ? { ...customer, ...updatedCustomer } : customer
+        customer.id === id && customer.userId === currentUser.username 
+          ? { ...customer, ...updatedCustomer } 
+          : customer
       ),
     }));
     toast.success("Cliente atualizado com sucesso");
   },
   
   deleteCustomer: (id) => {
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) {
+      toast.error("Você precisa estar logado para excluir um cliente");
+      return;
+    }
+    
     set((state) => ({
-      customers: state.customers.filter((customer) => customer.id !== id),
+      customers: state.customers.filter((customer) => 
+        !(customer.id === id && customer.userId === currentUser.username)
+      ),
     }));
     toast.success("Cliente excluído com sucesso");
   },
   
   addSubscriptionToCustomer: (customerId, planId, startDate) => {
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) {
+      toast.error("Você precisa estar logado para adicionar uma assinatura");
+      return;
+    }
+    
     const newSubscription = {
       id: Math.random().toString(36).substring(2, 11),
       planId,
@@ -55,7 +77,7 @@ export const createCustomersSlice: StateCreator<
     
     set((state) => ({
       customers: state.customers.map((customer) =>
-        customer.id === customerId
+        customer.id === customerId && customer.userId === currentUser.username
           ? { 
               ...customer, 
               subscriptions: [...customer.subscriptions, newSubscription]
@@ -67,8 +89,13 @@ export const createCustomersSlice: StateCreator<
   },
   
   renewSubscription: (customerId, subscriptionId, planId) => {
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) {
+      toast.error("Você precisa estar logado para renovar uma assinatura");
+      return;
+    }
     
-    const customer = get().customers.find(c => c.id === customerId);
+    const customer = get().customers.find(c => c.id === customerId && c.userId === currentUser.username);
     if (!customer) return;
     
     const customerDetails = get().getCustomerById(customerId);
@@ -93,7 +120,7 @@ export const createCustomersSlice: StateCreator<
       
       set((state) => ({
         customers: state.customers.map((c) => 
-          c.id === customerId
+          c.id === customerId && c.userId === currentUser.username
             ? { 
                 ...c, 
                 subscriptions: c.subscriptions.map(sub => 
@@ -109,7 +136,7 @@ export const createCustomersSlice: StateCreator<
       // No remaining days, just set the new start date to today
       set((state) => ({
         customers: state.customers.map((c) => 
-          c.id === customerId
+          c.id === customerId && c.userId === currentUser.username
             ? { 
                 ...c, 
                 subscriptions: c.subscriptions.map(sub => 
@@ -127,9 +154,15 @@ export const createCustomersSlice: StateCreator<
   },
   
   removeSubscription: (customerId, subscriptionId) => {
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) {
+      toast.error("Você precisa estar logado para remover uma assinatura");
+      return;
+    }
+    
     set((state) => ({
       customers: state.customers.map((customer) =>
-        customer.id === customerId
+        customer.id === customerId && customer.userId === currentUser.username
           ? { 
               ...customer, 
               subscriptions: customer.subscriptions.filter(sub => sub.id !== subscriptionId)
@@ -144,10 +177,14 @@ export const createCustomersSlice: StateCreator<
     const { customers, plans } = get();
     const currentUser = useAuthStore.getState().user;
     
+    if (!currentUser) {
+      console.log("Usuário não autenticado, retornando lista vazia");
+      return [];
+    }
+    
     // Filtrar clientes pelo usuário atual
-    const userCustomers = currentUser 
-      ? customers.filter(customer => customer.userId === currentUser.username)
-      : [];
+    const userCustomers = customers.filter(customer => customer.userId === currentUser.username);
+    console.log(`Encontrados ${userCustomers.length} clientes para o usuário ${currentUser.username}`);
     
     return userCustomers.map(customer => {
       const subscriptionsWithDetails = customer.subscriptions.map(subscription => {
@@ -188,13 +225,17 @@ export const createCustomersSlice: StateCreator<
   
   getCustomerById: (id) => {
     const { customers, plans } = get();
-    const customer = customers.find(c => c.id === id);
-    if (!customer) return undefined;
-    
-    // Verificar se o cliente pertence ao usuário atual
     const currentUser = useAuthStore.getState().user;
-    if (currentUser && customer.userId !== currentUser.username) {
-      return undefined; // Cliente não pertence ao usuário atual
+    
+    if (!currentUser) {
+      console.log("Usuário não autenticado, retornando undefined");
+      return undefined;
+    }
+    
+    const customer = customers.find(c => c.id === id && c.userId === currentUser.username);
+    if (!customer) {
+      console.log(`Cliente ${id} não encontrado para o usuário ${currentUser.username}`);
+      return undefined;
     }
     
     // Handle inactive customers separately

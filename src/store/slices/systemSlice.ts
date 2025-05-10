@@ -26,14 +26,19 @@ export const createSystemSlice: StateCreator<
     }
     
     // Só adiciona dados iniciais se não houver dados existentes
-    // Adicionar userId aos clientes iniciais
+    // Adicionar userId aos planos e clientes iniciais
+    const plansWithUserId = initialPlans.map(plan => ({
+      ...plan,
+      userId: username
+    }));
+    
     const customersWithUserId = initialCustomers.map(customer => ({
       ...customer,
       userId: username
     }));
     
     set({
-      plans: initialPlans,
+      plans: plansWithUserId,
       customers: customersWithUserId,
     });
     toast.success("Dados iniciais carregados");

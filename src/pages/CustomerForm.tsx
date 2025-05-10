@@ -35,14 +35,14 @@ export default function CustomerForm() {
       name: "",
       email: "",
       phone: "",
-      status: "active" as "active" | "inactive" // Fixed type definition here
+      status: "active" as "active" | "inactive"
     }
   });
 
   // Carregar dados do cliente se estivermos em modo de edição
   useEffect(() => {
     if (id) {
-      const customer = customers.find(c => c.id === id);
+      const customer = customers.find(c => c.id === id && c.userId === currentUser?.username);
       if (customer) {
         form.reset({
           name: customer.name,
@@ -50,9 +50,13 @@ export default function CustomerForm() {
           phone: customer.phone || "",
           status: customer.status
         });
+      } else {
+        // Se não encontrar o cliente, redirecionar para a lista
+        toast.error("Cliente não encontrado ou não pertence a este usuário");
+        navigate("/customers");
       }
     }
-  }, [id, customers, form]);
+  }, [id, customers, form, navigate, currentUser]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     if (!currentUser) {

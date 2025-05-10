@@ -24,10 +24,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Plans() {
-  const { plans, deletePlan } = useSubscriptionStore();
+  const { plans: allPlans, deletePlan } = useSubscriptionStore();
+  const currentUser = useAuthStore((state) => state.user);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
+
+  // Filtrar planos pelo usuário atual
+  const plans = allPlans.filter(plan => plan.userId === currentUser?.username);
 
   const handleDelete = () => {
     if (planToDelete) {
