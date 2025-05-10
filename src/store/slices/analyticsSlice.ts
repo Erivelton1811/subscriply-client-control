@@ -7,35 +7,36 @@ export const createAnalyticsSlice: StateCreator<
   [],
   [],
   AnalyticsSlice
-> = (get) => ({
+> = (set, get) => ({
   getActiveSubscriptions: () => {
-    const state = get();
-    const customers = state.getCustomerDetails();
+    // Get access to the customers slice functions directly from the store
+    const getCustomerDetails = get().getCustomerDetails;
+    const customers = getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'active').length;
     }, 0);
   },
   
   getExpiringSubscriptions: () => {
-    const state = get();
-    const customers = state.getCustomerDetails();
+    const getCustomerDetails = get().getCustomerDetails;
+    const customers = getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'warning').length;
     }, 0);
   },
   
   getExpiredSubscriptions: () => {
-    const state = get();
-    const customers = state.getCustomerDetails();
+    const getCustomerDetails = get().getCustomerDetails;
+    const customers = getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'expired').length;
     }, 0);
   },
   
   getExpectedMonthlyProfit: () => {
-    const state = get();
-    const customers = state.getCustomerDetails();
-    const plans = state.plans;
+    const getCustomerDetails = get().getCustomerDetails;
+    const plans = get().plans;
+    const customers = getCustomerDetails();
     
     let totalProfit = 0;
     
@@ -63,14 +64,14 @@ export const createAnalyticsSlice: StateCreator<
   },
   
   getExpectedYearlyProfit: () => {
-    const state = get();
-    const monthlyProfit = state.getExpectedMonthlyProfit();
+    const getExpectedMonthlyProfit = get().getExpectedMonthlyProfit;
+    const monthlyProfit = getExpectedMonthlyProfit();
     return monthlyProfit * 12;
   },
   
   getAverageSubscriptionValue: () => {
-    const state = get();
-    const customers = state.getCustomerDetails();
+    const getCustomerDetails = get().getCustomerDetails;
+    const customers = getCustomerDetails();
     
     let totalValue = 0;
     let totalActiveSubscriptions = 0;
