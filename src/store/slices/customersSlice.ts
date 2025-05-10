@@ -1,6 +1,5 @@
-
 import { StateCreator } from 'zustand';
-import { SubscriptionState } from '../types';
+import { SubscriptionState, CustomersSlice } from '../types';
 import { CustomerWithPlanDetails } from '@/types';
 import { toast } from "sonner";
 
@@ -8,7 +7,7 @@ export const createCustomersSlice: StateCreator<
   SubscriptionState,
   [],
   [],
-  Pick<SubscriptionState, keyof SubscriptionState>
+  CustomersSlice
 > = (set, get) => ({
   customers: [],
   
@@ -59,6 +58,7 @@ export const createCustomersSlice: StateCreator<
   },
   
   renewSubscription: (customerId, subscriptionId, planId) => {
+    
     const customer = get().customers.find(c => c.id === customerId);
     if (!customer) return;
     

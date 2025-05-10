@@ -1,13 +1,13 @@
 
 import { StateCreator } from 'zustand';
-import { SubscriptionState } from '../types';
+import { SubscriptionState, PlansSlice } from '../types';
 import { toast } from "sonner";
 
 export const createPlansSlice: StateCreator<
   SubscriptionState,
   [],
   [],
-  Pick<SubscriptionState, keyof SubscriptionState>
+  PlansSlice
 > = (set, get) => ({
   plans: [],
   

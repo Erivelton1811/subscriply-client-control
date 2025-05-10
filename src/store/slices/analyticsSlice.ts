@@ -1,40 +1,37 @@
 
 import { StateCreator } from 'zustand';
-import { SubscriptionState } from '../types';
+import { SubscriptionState, AnalyticsSlice } from '../types';
 
 export const createAnalyticsSlice: StateCreator<
   SubscriptionState,
   [],
   [],
-  Pick<SubscriptionState, keyof SubscriptionState>
+  AnalyticsSlice
 > = (get) => ({
   getActiveSubscriptions: () => {
-    const { getCustomerDetails } = get();
-    const customers = getCustomerDetails();
+    const customers = get().getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'active').length;
     }, 0);
   },
   
   getExpiringSubscriptions: () => {
-    const { getCustomerDetails } = get();
-    const customers = getCustomerDetails();
+    const customers = get().getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'warning').length;
     }, 0);
   },
   
   getExpiredSubscriptions: () => {
-    const { getCustomerDetails } = get();
-    const customers = getCustomerDetails();
+    const customers = get().getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'expired').length;
     }, 0);
   },
   
   getExpectedMonthlyProfit: () => {
-    const { getCustomerDetails, plans } = get();
-    const customers = getCustomerDetails();
+    const customers = get().getCustomerDetails();
+    const { plans } = get();
     
     let totalProfit = 0;
     
@@ -67,8 +64,7 @@ export const createAnalyticsSlice: StateCreator<
   },
   
   getAverageSubscriptionValue: () => {
-    const { getCustomerDetails } = get();
-    const customers = getCustomerDetails();
+    const customers = get().getCustomerDetails();
     
     let totalValue = 0;
     let totalActiveSubscriptions = 0;

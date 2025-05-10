@@ -1,6 +1,6 @@
 
 import { StateCreator } from 'zustand';
-import { SubscriptionState } from '../types';
+import { SubscriptionState, ReportsSlice } from '../types';
 import { ReportData } from '@/types';
 
 // Initial reports configuration
@@ -53,7 +53,7 @@ export const createReportsSlice: StateCreator<
   SubscriptionState,
   [],
   [],
-  Pick<SubscriptionState, keyof SubscriptionState>
+  ReportsSlice
 > = (set) => ({
   reports: initialReports,
   
