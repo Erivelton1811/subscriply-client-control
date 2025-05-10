@@ -10,11 +10,22 @@ export const createSystemSlice: StateCreator<
   [],
   [],
   SystemSlice
-> = (set) => ({
+> = (set, get) => ({
   resetToInitialData: () => {
     const currentUser = useAuthStore.getState().user;
     const username = currentUser ? currentUser.username : 'default';
     
+    // Verificar se já existem dados no state atual
+    const currentPlans = get().plans;
+    const currentCustomers = get().customers;
+    
+    // Se já existem dados, não resetar
+    if (currentPlans.length > 0 || currentCustomers.length > 0) {
+      toast.info("Dados existentes mantidos");
+      return;
+    }
+    
+    // Só adiciona dados iniciais se não houver dados existentes
     // Adicionar userId aos clientes iniciais
     const customersWithUserId = initialCustomers.map(customer => ({
       ...customer,
@@ -25,6 +36,6 @@ export const createSystemSlice: StateCreator<
       plans: initialPlans,
       customers: customersWithUserId,
     });
-    toast.success("Dados redefinidos para o padrão inicial");
+    toast.success("Dados iniciais carregados");
   },
 });
