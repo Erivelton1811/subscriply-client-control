@@ -21,6 +21,7 @@ export interface Customer {
   phone?: string;
   status: 'active' | 'inactive';
   subscriptions: CustomerSubscription[];
+  userId: string; // Adicionado para associar cliente ao usuário
 }
 
 export interface CustomerWithPlanDetails extends Omit<Customer, "subscriptions"> {

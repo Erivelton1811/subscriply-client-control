@@ -9,7 +9,7 @@ export const createAnalyticsSlice: StateCreator<
   AnalyticsSlice
 > = (set, get) => ({
   getActiveSubscriptions: () => {
-    // Get access to the customers slice functions directly from the store
+    // Get access to the customers slice functions directly
     const getCustomerDetails = get().getCustomerDetails;
     const customers = getCustomerDetails();
     return customers.reduce((count, customer) => {

@@ -1,7 +1,9 @@
+
 import { StateCreator } from 'zustand';
 import { SubscriptionState, CustomersSlice } from '../types';
 import { CustomerWithPlanDetails } from '@/types';
 import { toast } from "sonner";
+import { useAuthStore } from '../authStore'; // Importamos o authStore
 
 export const createCustomersSlice: StateCreator<
   SubscriptionState,
@@ -12,9 +14,16 @@ export const createCustomersSlice: StateCreator<
   customers: [],
   
   addCustomer: (customer) => {
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser) {
+      toast.error("Você precisa estar logado para adicionar um cliente");
+      return;
+    }
+    
     const newCustomer = { 
       ...customer, 
       id: Math.random().toString(36).substring(2, 11),
+      userId: currentUser.username // Associamos o cliente ao usuário atual
     };
     
     set((state) => ({ customers: [...state.customers, newCustomer] }));
@@ -133,8 +142,14 @@ export const createCustomersSlice: StateCreator<
   
   getCustomerDetails: () => {
     const { customers, plans } = get();
+    const currentUser = useAuthStore.getState().user;
     
-    return customers.map(customer => {
+    // Filtrar clientes pelo usuário atual
+    const userCustomers = currentUser 
+      ? customers.filter(customer => customer.userId === currentUser.username)
+      : [];
+    
+    return userCustomers.map(customer => {
       const subscriptionsWithDetails = customer.subscriptions.map(subscription => {
         const plan = plans.find(p => p.id === subscription.planId);
         if (!plan) return null;
@@ -175,6 +190,12 @@ export const createCustomersSlice: StateCreator<
     const { customers, plans } = get();
     const customer = customers.find(c => c.id === id);
     if (!customer) return undefined;
+    
+    // Verificar se o cliente pertence ao usuário atual
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser && customer.userId !== currentUser.username) {
+      return undefined; // Cliente não pertence ao usuário atual
+    }
     
     // Handle inactive customers separately
     if (customer.status === "inactive") {
