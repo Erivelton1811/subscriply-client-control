@@ -47,6 +47,9 @@ fifteenDaysAgo.setDate(today.getDate() - 15);
 const fiveDaysAgo = new Date();
 fiveDaysAgo.setDate(today.getDate() - 5);
 
+// Adicionando userId para todos os clientes
+const defaultUserId = "eriveltonadmin"; // ID do usuário admin padrão
+
 export const customers: Customer[] = [
   {
     id: "cust1",
@@ -60,7 +63,8 @@ export const customers: Customer[] = [
         planId: "plan1",
         startDate: fifteenDaysAgo.toISOString(),
       }
-    ]
+    ],
+    userId: defaultUserId
   },
   {
     id: "cust2",
@@ -73,7 +77,8 @@ export const customers: Customer[] = [
         planId: "plan2",
         startDate: thirtyDaysAgo.toISOString(),
       }
-    ]
+    ],
+    userId: defaultUserId
   },
   {
     id: "cust3",
@@ -92,7 +97,8 @@ export const customers: Customer[] = [
         planId: "plan1",
         startDate: today.toISOString(),
       }
-    ]
+    ],
+    userId: defaultUserId
   },
   {
     id: "cust4",
@@ -105,6 +111,7 @@ export const customers: Customer[] = [
         planId: "plan4",
         startDate: today.toISOString(),
       }
-    ]
+    ],
+    userId: defaultUserId
   }
 ];

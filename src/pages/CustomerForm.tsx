@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSubscriptionStore } from "@/store/subscriptionStore";
@@ -22,6 +21,7 @@ import {
 import { format } from "date-fns";
 import { CalendarIcon, Plus, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore"; // Importamos o authStore
 
 type SubscriptionFormItem = {
   planId: string;
@@ -33,6 +33,7 @@ export default function CustomerForm() {
   const navigate = useNavigate();
   const { plans, customers, addCustomer, updateCustomer, getCustomerById } =
     useSubscriptionStore();
+  const { user } = useAuthStore(); // Obtemos o usuário atual
 
   const [formData, setFormData] = useState({
     name: "",
@@ -114,6 +115,12 @@ export default function CustomerForm() {
       startDate: sub.startDate.toISOString()
     }));
 
+    // Verificar se o usuário está logado
+    if (!user) {
+      console.error("Usuário não está logado");
+      return;
+    }
+
     if (id) {
       updateCustomer(id, {
         ...formData,
@@ -122,7 +129,8 @@ export default function CustomerForm() {
     } else {
       addCustomer({
         ...formData,
-        subscriptions: formattedSubscriptions
+        subscriptions: formattedSubscriptions,
+        userId: user.username // Adicionar userId do usuário logado
       });
     }
 
