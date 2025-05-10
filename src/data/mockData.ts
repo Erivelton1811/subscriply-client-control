@@ -6,6 +6,9 @@ const generateId = (): string => {
   return Math.random().toString(36).substring(2, 11);
 };
 
+// Default userId for mock data
+const defaultUserId = "eriveltonadmin"; // ID do usuário admin padrão
+
 // Mock Plans
 export const plans: Plan[] = [
   {
@@ -13,28 +16,32 @@ export const plans: Plan[] = [
     name: "Básico",
     price: 29.90,
     duration: 30, // 30 days
-    description: "Acesso básico aos serviços"
+    description: "Acesso básico aos serviços",
+    userId: defaultUserId
   },
   {
     id: "plan2",
     name: "Premium",
     price: 59.90,
     duration: 30, // 30 days
-    description: "Acesso completo com suporte prioritário"
+    description: "Acesso completo com suporte prioritário",
+    userId: defaultUserId
   },
   {
     id: "plan3",
     name: "Empresarial",
     price: 99.90,
     duration: 30, // 30 days
-    description: "Ideal para pequenas empresas com múltiplos acessos"
+    description: "Ideal para pequenas empresas com múltiplos acessos",
+    userId: defaultUserId
   },
   {
     id: "plan4",
     name: "Anual Básico",
     price: 299.90,
     duration: 365, // 365 days
-    description: "Plano básico com pagamento anual (economia de 15%)"
+    description: "Plano básico com pagamento anual (economia de 15%)",
+    userId: defaultUserId
   }
 ];
 

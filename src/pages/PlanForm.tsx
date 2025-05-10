@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuthStore } from "@/store/authStore";
 
 export default function PlanForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { plans, addPlan, updatePlan, getPlanById } = useSubscriptionStore();
+  const currentUser = useAuthStore(state => state.user);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -91,10 +93,20 @@ export default function PlanForm() {
     
     if (!validateForm()) return;
     
+    if (!currentUser) {
+      // Handle case when user is not logged in
+      return;
+    }
+    
     if (id) {
       updatePlan(id, formData);
     } else {
-      addPlan(formData);
+      // Add userId to the form data when creating a new plan
+      const planWithUserId = {
+        ...formData,
+        userId: currentUser.username
+      };
+      addPlan(planWithUserId);
     }
     
     navigate("/plans");
