@@ -9,29 +9,33 @@ export const createAnalyticsSlice: StateCreator<
   AnalyticsSlice
 > = (get) => ({
   getActiveSubscriptions: () => {
-    const customers = get().getCustomerDetails();
+    const state = get();
+    const customers = state.getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'active').length;
     }, 0);
   },
   
   getExpiringSubscriptions: () => {
-    const customers = get().getCustomerDetails();
+    const state = get();
+    const customers = state.getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'warning').length;
     }, 0);
   },
   
   getExpiredSubscriptions: () => {
-    const customers = get().getCustomerDetails();
+    const state = get();
+    const customers = state.getCustomerDetails();
     return customers.reduce((count, customer) => {
       return count + customer.subscriptions.filter(sub => sub.status === 'expired').length;
     }, 0);
   },
   
   getExpectedMonthlyProfit: () => {
-    const customers = get().getCustomerDetails();
-    const { plans } = get();
+    const state = get();
+    const customers = state.getCustomerDetails();
+    const plans = state.plans;
     
     let totalProfit = 0;
     
@@ -59,12 +63,14 @@ export const createAnalyticsSlice: StateCreator<
   },
   
   getExpectedYearlyProfit: () => {
-    const monthlyProfit = get().getExpectedMonthlyProfit();
+    const state = get();
+    const monthlyProfit = state.getExpectedMonthlyProfit();
     return monthlyProfit * 12;
   },
   
   getAverageSubscriptionValue: () => {
-    const customers = get().getCustomerDetails();
+    const state = get();
+    const customers = state.getCustomerDetails();
     
     let totalValue = 0;
     let totalActiveSubscriptions = 0;
