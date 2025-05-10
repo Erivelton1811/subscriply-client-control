@@ -35,7 +35,7 @@ export default function CustomerForm() {
       name: "",
       email: "",
       phone: "",
-      status: "active" as const
+      status: "active" as "active" | "inactive" // Fixed type definition here
     }
   });
 
