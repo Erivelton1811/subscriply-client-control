@@ -36,21 +36,21 @@ export default function Dashboard() {
     customer.subscriptions.some(sub => sub.status === 'warning')
   );
 
-  // Get total revenue
+  // Get total revenue (cost price)
   const totalRevenue = customersArray.reduce((sum, customer) => {
     const customerRevenue = customer.subscriptions.reduce((subSum, sub) => 
-      subSum + sub.plan.price, 0);
+      subSum + (sub.plan.resalePrice || 0), 0);
     return sum + customerRevenue;
   }, 0);
 
-  // Get total resale revenue (if applicable)
+  // Get total resale revenue (selling price to customers)
   const totalResaleRevenue = customersArray.reduce((sum, customer) => {
     const customerResaleRevenue = customer.subscriptions.reduce((subSum, sub) => 
-      subSum + (sub.plan.resalePrice || sub.plan.price), 0);
+      subSum + sub.plan.price, 0);
     return sum + customerResaleRevenue;
   }, 0);
 
-  // Calculate profit margin
+  // Calculate profit margin correctly: what we charge customers minus our cost
   const profitMargin = totalResaleRevenue - totalRevenue;
 
   return (
@@ -103,7 +103,7 @@ export default function Dashboard() {
             <CardDescription>Receita gerada por todos os planos</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">R$ {totalRevenue.toFixed(2)}</div>
+            <div className="text-3xl font-bold">R$ {totalResaleRevenue.toFixed(2)}</div>
           </CardContent>
         </Card>
 
@@ -113,7 +113,7 @@ export default function Dashboard() {
               <TrendingUp className="h-5 w-5 mr-2 text-blue-500" />
               Margem de Lucro
             </CardTitle>
-            <CardDescription>Lucro total (receita de revenda - receita original)</CardDescription>
+            <CardDescription>Lucro total (receita de vendas - custo de compra)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">R$ {profitMargin.toFixed(2)}</div>

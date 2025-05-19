@@ -46,7 +46,7 @@ export const createAnalyticsSlice: StateCreator<
           const plan = plans.find(p => p.id === subscription.plan.id);
           if (!plan) return;
           
-          // Calculate profit per plan
+          // Calculate profit per plan: price charged to customer minus our cost (resalePrice)
           const profitPerPlan = plan.price - (plan.resalePrice || 0);
           
           // Calculate daily profit (profit per plan divided by duration)
