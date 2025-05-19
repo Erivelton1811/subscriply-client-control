@@ -23,25 +23,28 @@ export default function Dashboard() {
     );
   }
 
+  // Garantir que customers é sempre um array
+  const customersArray = Array.isArray(customers) ? customers : [];
+
   // Get customers with active plans
-  const activeCustomers = customers.filter((customer) => 
+  const activeCustomers = customersArray.filter((customer) => 
     customer.status === 'active' && customer.subscriptions.some(sub => sub.status === 'active')
   );
 
   // Get customers with expiring plans (warning status)
-  const expiringCustomers = customers.filter((customer) =>
+  const expiringCustomers = customersArray.filter((customer) =>
     customer.subscriptions.some(sub => sub.status === 'warning')
   );
 
   // Get total revenue
-  const totalRevenue = customers.reduce((sum, customer) => {
+  const totalRevenue = customersArray.reduce((sum, customer) => {
     const customerRevenue = customer.subscriptions.reduce((subSum, sub) => 
       subSum + sub.plan.price, 0);
     return sum + customerRevenue;
   }, 0);
 
   // Get total resale revenue (if applicable)
-  const totalResaleRevenue = customers.reduce((sum, customer) => {
+  const totalResaleRevenue = customersArray.reduce((sum, customer) => {
     const customerResaleRevenue = customer.subscriptions.reduce((subSum, sub) => 
       subSum + (sub.plan.resalePrice || sub.plan.price), 0);
     return sum + customerResaleRevenue;

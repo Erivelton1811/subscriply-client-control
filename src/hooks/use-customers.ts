@@ -18,7 +18,8 @@ export function useCustomers() {
     queryFn: () => {
       console.log(`Buscando dados atualizados de clientes para o usuário: ${currentUser?.username}`);
       // Retorna os detalhes do cliente do store filtrados pelo usuário atual
-      return getCustomerDetails();
+      const customers = getCustomerDetails();
+      return Array.isArray(customers) ? customers : [];
     },
     // Configurações específicas para esta consulta
     refetchOnMount: true,

@@ -15,18 +15,13 @@ export const createSystemSlice: StateCreator<
     const currentUser = useAuthStore.getState().user;
     const username = currentUser ? currentUser.username : 'default';
     
-    // Verificar se já existem dados no state atual
-    const currentPlans = get().plans.filter(p => p.userId === username);
-    const currentCustomers = get().customers.filter(c => c.userId === username);
+    // Limpar completamente os dados do usuário atual
+    set((state) => ({
+      plans: state.plans.filter(p => p.userId !== username),
+      customers: state.customers.filter(c => c.userId !== username),
+    }));
     
-    // Se já existem dados, não resetar
-    if (currentPlans.length > 0 || currentCustomers.length > 0) {
-      toast.info("Dados existentes mantidos para este usuário");
-      return;
-    }
-    
-    // Só adiciona dados iniciais se não houver dados existentes para este usuário
-    // Adicionar userId aos planos e clientes iniciais
+    // Adicionar dados iniciais com userId
     const plansWithUserId = initialPlans.map(plan => ({
       ...plan,
       userId: username
@@ -37,18 +32,12 @@ export const createSystemSlice: StateCreator<
       userId: username
     }));
     
-    // Manter planos e clientes de outros usuários e adicionar os novos
+    // Adicionar os novos planos e clientes com o userId atual
     set((state) => ({
-      plans: [
-        ...state.plans.filter(p => p.userId !== username), 
-        ...plansWithUserId
-      ],
-      customers: [
-        ...state.customers.filter(c => c.userId !== username),
-        ...customersWithUserId
-      ],
+      plans: [...state.plans, ...plansWithUserId],
+      customers: [...state.customers, ...customersWithUserId],
     }));
     
-    toast.success("Dados iniciais carregados");
+    toast.success("Dados resetados com sucesso. Sistema iniciado com dados padrão.");
   },
 });
