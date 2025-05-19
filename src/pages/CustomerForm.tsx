@@ -14,13 +14,19 @@ import { useAuthStore } from "@/store/authStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres." }),
   email: z.string().email({ message: "Email inválido." }),
   phone: z.string().optional(),
   status: z.enum(["active", "inactive"]),
-  planId: z.string().optional()
+  planId: z.string().optional(),
+  startDate: z.date().optional()
 });
 
 export default function CustomerForm() {
@@ -44,7 +50,8 @@ export default function CustomerForm() {
       email: "",
       phone: "",
       status: "active" as "active" | "inactive",
-      planId: undefined
+      planId: undefined,
+      startDate: new Date() // Data atual como padrão
     }
   });
 
@@ -53,12 +60,14 @@ export default function CustomerForm() {
     if (id) {
       const customer = customers.find(c => c.id === id && c.userId === currentUser?.username);
       if (customer) {
+        const subscription = customer.subscriptions[0];
         form.reset({
           name: customer.name,
           email: customer.email,
           phone: customer.phone || "",
           status: customer.status,
-          planId: customer.subscriptions[0]?.planId
+          planId: subscription?.planId,
+          startDate: subscription ? new Date(subscription.startDate) : undefined
         });
       } else {
         // Se não encontrar o cliente, redirecionar para a lista
@@ -106,9 +115,11 @@ export default function CustomerForm() {
           userId: currentUser.username
         });
         
-        // Se um plano foi selecionado, adicioná-lo ao cliente
+        // Se um plano foi selecionado, adicioná-lo ao cliente com a data escolhida
         if (data.planId) {
-          addSubscriptionToCustomer(newCustomerId, data.planId);
+          // Formatar a data para ISO string
+          const startDate = data.startDate ? data.startDate.toISOString() : undefined;
+          addSubscriptionToCustomer(newCustomerId, data.planId, startDate);
         }
         
         toast.success("Cliente criado com sucesso");
@@ -261,6 +272,49 @@ export default function CustomerForm() {
                   </FormItem>
                 )}
               />
+              
+              {/* Campo de data de início - visível apenas quando um plano é selecionado */}
+              {form.watch("planId") && (
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Data de Início</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "dd/MM/yyyy")
+                              ) : (
+                                <span>Selecione uma data</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </CardContent>
             
             <CardFooter className="flex justify-between">
