@@ -12,7 +12,16 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
-  const customers = useCustomers();
+  const { customers, isLoading } = useCustomers();
+
+  // Display loading state while customers are being fetched
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-xl">Carregando dados...</div>
+      </div>
+    );
+  }
 
   // Get customers with active plans
   const activeCustomers = customers.filter((customer) => 
