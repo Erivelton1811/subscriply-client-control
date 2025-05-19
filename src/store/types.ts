@@ -11,7 +11,7 @@ export interface PlansSlice {
 
 export interface CustomersSlice {
   customers: Customer[];
-  addCustomer: (customer: Omit<Customer, 'id'>) => void;
+  addCustomer: (customer: Omit<Customer, 'id'>) => string;
   updateCustomer: (id: string, updatedCustomer: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
   addSubscriptionToCustomer: (customerId: string, planId: string, startDate?: string) => void;

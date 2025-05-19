@@ -1,4 +1,3 @@
-
 import { StateCreator } from 'zustand';
 import { SubscriptionState, CustomersSlice } from '../types';
 import { CustomerWithPlanDetails } from '@/types';
@@ -17,7 +16,7 @@ export const createCustomersSlice: StateCreator<
     const currentUser = useAuthStore.getState().user;
     if (!currentUser) {
       toast.error("Você precisa estar logado para adicionar um cliente");
-      return;
+      return "";
     }
     
     // Verificar se já existe um cliente com o mesmo email para este usuário
@@ -27,17 +26,19 @@ export const createCustomersSlice: StateCreator<
     
     if (existingCustomer) {
       toast.error("Já existe um cliente com este email");
-      return;
+      return "";
     }
     
+    const newCustomerId = Math.random().toString(36).substring(2, 11);
     const newCustomer = { 
       ...customer, 
-      id: Math.random().toString(36).substring(2, 11),
+      id: newCustomerId,
       userId: currentUser.username // Associamos o cliente ao usuário atual
     };
     
     set((state) => ({ customers: [...state.customers, newCustomer] }));
     toast.success("Cliente adicionado com sucesso");
+    return newCustomerId;
   },
   
   updateCustomer: (id, updatedCustomer) => {

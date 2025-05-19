@@ -13,12 +13,14 @@ import { useSubscriptionStore } from "@/store/subscriptionStore";
 import { useAuthStore } from "@/store/authStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres." }),
   email: z.string().email({ message: "Email inválido." }),
   phone: z.string().optional(),
-  status: z.enum(["active", "inactive"])
+  status: z.enum(["active", "inactive"]),
+  planId: z.string().optional()
 });
 
 export default function CustomerForm() {
@@ -26,8 +28,14 @@ export default function CustomerForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addCustomer, updateCustomer, customers } = useSubscriptionStore();
+  const { addCustomer, updateCustomer, customers, addSubscriptionToCustomer } = useSubscriptionStore();
+  const { plans } = useSubscriptionStore();
   const currentUser = useAuthStore((state) => state.user);
+  
+  // Filtrar planos pelo usuário atual
+  const userPlans = plans.filter(plan => 
+    plan.userId === currentUser?.username
+  );
   
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -35,7 +43,8 @@ export default function CustomerForm() {
       name: "",
       email: "",
       phone: "",
-      status: "active" as "active" | "inactive"
+      status: "active" as "active" | "inactive",
+      planId: undefined
     }
   });
 
@@ -48,7 +57,8 @@ export default function CustomerForm() {
           name: customer.name,
           email: customer.email,
           phone: customer.phone || "",
-          status: customer.status
+          status: customer.status,
+          planId: customer.subscriptions[0]?.planId
         });
       } else {
         // Se não encontrar o cliente, redirecionar para a lista
@@ -73,8 +83,21 @@ export default function CustomerForm() {
         });
         toast.success("Cliente atualizado com sucesso");
       } else {
-        // Modo de criação - garantindo que todos os campos obrigatórios estejam presentes
-        addCustomer({
+        // Modo de criação
+        // Verificando se o email já existe para este usuário
+        const emailExists = customers.some(c => 
+          c.email === data.email && 
+          c.userId === currentUser.username
+        );
+        
+        if (emailExists) {
+          toast.error("Já existe um cliente com este email para este usuário");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Criando o cliente
+        const newCustomerId = addCustomer({
           name: data.name,
           email: data.email,
           phone: data.phone,
@@ -82,6 +105,12 @@ export default function CustomerForm() {
           subscriptions: [],
           userId: currentUser.username
         });
+        
+        // Se um plano foi selecionado, adicioná-lo ao cliente
+        if (data.planId) {
+          addSubscriptionToCustomer(newCustomerId, data.planId);
+        }
+        
         toast.success("Cliente criado com sucesso");
       }
       
@@ -189,6 +218,43 @@ export default function CustomerForm() {
                       <SelectContent>
                         <SelectItem value="active">Ativo</SelectItem>
                         <SelectItem value="inactive">Inativo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Separator className="my-2" />
+              
+              <FormField
+                control={form.control}
+                name="planId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plano (opcional)</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um plano" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {userPlans.length > 0 ? (
+                          userPlans.map((plan) => (
+                            <SelectItem key={plan.id} value={plan.id}>
+                              {plan.name} - R$ {plan.price.toFixed(2)}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-plans" disabled>
+                            Nenhum plano disponível
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />

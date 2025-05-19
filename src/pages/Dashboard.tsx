@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
-  const { customers, isLoading } = useCustomers();
+  const { customers = [], isLoading } = useCustomers();
 
   // Display loading state while customers are being fetched
   if (isLoading) {
