@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,74 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Mobile responsive adjustments */
+@layer utilities {
+  .responsive-container {
+    @apply px-3 md:px-6 lg:px-8;
+  }
+  
+  .responsive-card {
+    @apply p-3 md:p-4 lg:p-6;
+  }
+  
+  .responsive-heading {
+    @apply text-xl md:text-2xl lg:text-3xl font-bold;
+  }
+  
+  .responsive-text {
+    @apply text-sm md:text-base;
+  }
+}
+
+/* Fix mobile overflow issues */
+html, body {
+  @apply overflow-x-hidden;
+  width: 100%;
+}
+
+/* Improve mobile form elements */
+@media (max-width: 640px) {
+  input, select, textarea {
+    @apply text-base;
+  }
+  
+  button {
+    @apply min-h-10;
+  }
+}
+
+/* Improve dropdown positioning on mobile */
+.dropdown-content {
+  @apply z-50;
+}
+
+/* Improve card layouts on small screens */
+@media (max-width: 640px) {
+  .card {
+    @apply p-4;
+  }
+}
+
+/* Enhance table responsiveness */
+@media (max-width: 640px) {
+  table {
+    @apply block w-full overflow-x-auto;
+  }
+}
+
+/* Adjust App.css to better handle mobile */
+#root {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  #root {
+    padding: 2rem;
   }
 }
